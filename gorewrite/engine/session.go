@@ -27,18 +27,72 @@ type Session struct {
 	mu        sync.Mutex
 	closed    bool
 	// send queue
-	sendCh    chan []byte
+	sendCh chan []byte
 	// OnMessage, if set, is called for each parsed inbound message instead of Processor.Process
 	OnMessage func(*fixmsg.FixMessage)
+	// OnClose, if set, is called once when the session is closed (by Stop or error)
+	OnClose func()
+	// internal flag to ensure OnClose is called only once
+	onCloseCalled bool
 }
 
 func (s *Session) SetOnMessage(fn func(*fixmsg.FixMessage)) {
 	s.OnMessage = fn
 }
 
+// SetOnClose registers a callback to be invoked once when the session closes.
+func (s *Session) SetOnClose(fn func()) {
+	s.OnClose = fn
+}
+
 func NewSession(conn net.Conn, p ProcessorIface) *Session {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Session{Conn: conn, Processor: p, ctx: ctx, cancel: cancel, sendCh: make(chan []byte, 128)}
+}
+
+// onCloseOnce invokes the OnClose callback at most once.
+func (s *Session) onCloseOnce() {
+	s.mu.Lock()
+	if s.onCloseCalled {
+		s.mu.Unlock()
+		return
+	}
+	s.onCloseCalled = true
+	fn := s.OnClose
+	s.mu.Unlock()
+	if fn != nil {
+		fn()
+	}
+}
+
+// abort performs a non-blocking shutdown from within read/write loops.
+// It cancels the session context, closes the underlying connection and send channel,
+// and invokes the OnClose callback exactly once.
+func (s *Session) abort() {
+	// ensure only one closer proceeds
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return
+	}
+	s.closed = true
+	s.mu.Unlock()
+	// cancel context first so concurrent Send sees ctx.Done
+	s.cancel()
+	_ = s.Conn.Close()
+	// close send channel to wake writeLoop
+	select {
+	case <-s.ctx.Done():
+		// proceed
+	default:
+	}
+	// closing sendCh; guard against panic by recover
+	func() {
+		defer func() { _ = recover() }()
+		close(s.sendCh)
+	}()
+	// notify
+	s.onCloseOnce()
 }
 
 // Start begins the read and write loops and returns immediately.
@@ -50,23 +104,33 @@ func (s *Session) Start() {
 
 // Stop signals shutdown and waits for goroutines to finish.
 func (s *Session) Stop() {
+	// ensure we mark closed exactly once and still wait for goroutines
 	s.mu.Lock()
-	if s.closed {
-		s.mu.Unlock()
-		return
+	already := s.closed
+	if !already {
+		s.closed = true
 	}
-	s.closed = true
 	s.mu.Unlock()
-	s.cancel()
-	_ = s.Conn.Close()
-	close(s.sendCh)
+	if !already {
+		s.cancel()
+		_ = s.Conn.Close()
+		// guard against double-close
+		func() {
+			defer func() { _ = recover() }()
+			close(s.sendCh)
+		}()
+	}
+	// wait for read/write goroutines to finish
 	s.wg.Wait()
+	// ensure OnClose is invoked once
+	s.onCloseOnce()
 }
 
 // readLoop reads from the connection, assembles FIX frames by looking for the checksum (10=nnn<SOH>) tag,
 // and dispatches complete frames to the Processor. It tolerates partial TCP reads.
 func (s *Session) readLoop() {
 	defer s.wg.Done()
+	defer s.abort()
 	buf := make([]byte, 0, 8192)
 	tmp := make([]byte, 4096)
 	for {
@@ -124,6 +188,7 @@ func (s *Session) readLoop() {
 // writeLoop consumes sendCh and writes frames to the underlying connection.
 func (s *Session) writeLoop() {
 	defer s.wg.Done()
+	defer s.abort()
 	for {
 		select {
 		case <-s.ctx.Done():
