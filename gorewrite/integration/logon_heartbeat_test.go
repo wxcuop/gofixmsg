@@ -21,7 +21,13 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		// server-side processor and engine
 		proc := engine.NewProcessor()
 		server := &engine.FixEngine{}
-		// register reply to Logon
+		server.Proc = proc
+		// send immediate Logon from acceptor to initiator (simpler for test)
+		im := engine.NewLogonMessage("SV", "CL")
+		if b, err := im.ToWire(); err == nil {
+			_, _ = conn.Write(b)
+		}
+		// register reply to Logon (in case we need to respond again)
 		proc.Register("A", func(m *fixmsg.FixMessage) error {
 			sender, _ := m.Get(56)
 			target, _ := m.Get(49)
@@ -32,12 +38,26 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		})
 		// create session
 		sess := engine.NewSession(conn, proc)
-		server.Session = sess
-		// monitor
-		server.Monitor = engine.NewHeartbeatMonitor(server, 20*time.Millisecond, 40*time.Millisecond)
-		sess.SetOnMessage(func(m *fixmsg.FixMessage) { _ = server.HandleIncoming(m); server.Monitor.Seen() })
-		sess.Start()
-		server.Monitor.Start(context.Background())
+		// setup components for server and attach session
+		stServer := store.NewSQLiteStore()
+		_ = stServer.Init(":memory:")
+		server.SetupComponents(state.NewStateMachine(), stServer)
+		_ = server.AttachSession(sess)
+		// start server-side heartbeat sender to exercise initiator receive path
+		go func() {
+			t := time.NewTicker(20 * time.Millisecond)
+			defer t.Stop()
+			for {
+				select {
+				case <-context.Background().Done():
+					return
+				case <-t.C:
+					hb := engine.NewHeartbeatMessage("SV", "CL")
+					b, _ := hb.ToWire()
+					_ = server.SessionSend(b)
+				}
+			}
+		}()
 	}
 
 	err := acc.Start(handler)

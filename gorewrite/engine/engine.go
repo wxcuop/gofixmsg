@@ -4,9 +4,12 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 	"time"
 
+	"github.com/wxcuop/pyfixmsg_plus/config"
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/pyfixmsg_plus/heartbeat"
 	"github.com/wxcuop/pyfixmsg_plus/network"
 	"github.com/wxcuop/pyfixmsg_plus/state"
 	"github.com/wxcuop/pyfixmsg_plus/store"
@@ -22,6 +25,9 @@ type FixEngine struct {
 	Store     store.Store
 	SeqMgr    *SeqManager
 	Monitor   *HeartbeatMonitor
+	// heartbeat sender
+	hbSender          *heartbeat.Heartbeat
+	heartbeatInterval time.Duration
 }
 
 func (e *FixEngine) SessionSend(b []byte) error {
@@ -49,6 +55,17 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 		sid = e.Initiator.Addr
 	}
 	e.SeqMgr = NewSeqManager(st, sid)
+	// read heartbeat interval from config manager if present
+	mgr := config.GetManager()
+	intervalSec := 30
+	if mgr != nil {
+		if v := mgr.Get("", "heartbeat_interval"); v != "" {
+			if n, err := strconv.Atoi(v); err == nil && n > 0 {
+				intervalSec = n
+			}
+		}
+	}
+	e.heartbeatInterval = time.Duration(intervalSec) * time.Second
 	ctx := &HandlerContext{SM: sm, Store: st, Engine: e}
 	RegisterDefaultHandlers(e.Proc, ctx)
 }
@@ -62,32 +79,14 @@ func (e *FixEngine) Connect() error {
 		return err
 	}
 	e.Conn = c
-	// create session and wire message callback to engine/monitor
+	// create session and attach
 	s := NewSession(c, e.Proc)
-	e.Session = s
-	if e.Monitor == nil {
-		e.Monitor = NewHeartbeatMonitor(e, 30*time.Second, 30*time.Second)
-	}
-	// On inbound message, pass to engine and notify monitor
-	s.SetOnMessage(func(m *fixmsg.FixMessage) {
-		_ = e.HandleIncoming(m)
-		if e.Monitor != nil {
-			e.Monitor.Seen()
-		}
-	})
-	s.Start()
-	// start monitor
-	e.Monitor.Start(context.Background())
-	return nil
+	return e.AttachSession(s)
 }
 
 func (e *FixEngine) Close() error {
-	if e.Monitor != nil {
-		e.Monitor.Stop()
-	}
-	if e.Session != nil {
-		e.Session.Stop()
-	}
+	// stop heartbeat and monitor and session
+	e.DetachSession()
 	if e.Conn != nil {
 		return e.Conn.Close()
 	}
