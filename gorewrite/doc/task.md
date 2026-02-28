@@ -1,120 +1,79 @@
 # Go Rewrite Task Tracking
 
-## Completed Phases (37/43 todos done)
+## Completed Phases (45+ todos done)
 
 ### Phase 1: FIX Message Foundation
-- [x] `go.mod` setup with dependencies (testify, config loaders)
+- [x] `go.mod` setup with dependencies
 - [x] `fixmsg/fixmessage.go` - FixMessage struct with Codec interface
-- [x] `fixmsg/fragment.go` - FixFragment map type for tag/value pairs
+- [x] `fixmsg/fragment.go` - FixFragment map type
 - [x] `fixmsg/repeatinggroup.go` - RepeatingGroup support
 - [x] `fixmsg/codec/codec.go` - Parse/Serialise with SOH delimiters
-- [x] `fixmsg/spec/spec.go` - XML spec loader for QuickFIX files
-- [x] `fixmsg/tags.go` - Tag constants and header/trailer mappings
-- [x] Unit tests for all core message handling
+- [x] `fixmsg/spec/spec.go` - XML spec loader (FixSpec)
+- [x] `fixmsg/tags.go` - Tag constants and mappings
 
 ### Phase 2: Configuration & Security
-- [x] `config/configmanager.go` - INI reader with ENC: decryption support
-- [x] `crypt/simplecrypt.go` - PBKDF2 + AES-GCM encryption/decryption
+- [x] `config/configmanager.go` - INI reader with decryption
+- [x] `crypt/simplecrypt.go` - PBKDF2 + AES-GCM
 
 ### Phase 3-5: Infrastructure
-- [x] `idgen/idgen.go` - ClOrdID and message ID generators
-- [x] `store/sqlite.go` - SQLite message store with session persistence
-- [x] `state/statemachine.go` - FIX state machine with transitions
+- [x] `idgen/clordid.go` - ClOrdID generators
+- [x] `store/sqlite.go` - SQLite message store
+- [x] `state/statemachine.go` - FIX state machine
 
 ### Phase 6-8: Network & Handlers
-- [x] `network/{initiator,acceptor}.go` - TCP connection wrappers
-- [x] `handler/processor.go` - Message handler registry and dispatch
-- [x] `heartbeat/heartbeat.go` - Heartbeat scheduler and monitor
+- [x] `network/{initiator,acceptor}.go` - TCP wrappers
+- [x] `engine/processor.go` - Message handler dispatch
+- [x] `heartbeat/heartbeat.go` - Heartbeat scheduler
 
-### Phase 9-11: Engine Assembly
-- [x] `engine/engine.go` - FixEngine core component
-- [x] `engine/attach.go` - Session attach/detach with monitor/heartbeat wiring
-- [x] `integration/logon_heartbeat_test.go` - Integration test
+### Phase 9: Reconnect/Backoff
+- [x] Exponential backoff with jitter
+- [x] `FixEngine.startReconnectLoop()`
+- [x] Integration tests for reconnect
 
-### Phase 12: Session Framing & Run Loops
-- [x] `engine/session.go` - ReadLoop (partial frame tolerance), WriteLoop (send queue), Start/Stop
-- [x] `engine/seqnum.go` - SeqManager with persistence via store
-- [x] Session.Send API for queued writes
-- [x] Integration test for partial TCP reads and send queue
+### Phase 10: Application Interface
+- [x] `engine/application.go` - Callback interface
+- [x] Wire callbacks into admin and app handlers
+- [x] `OnCreate`, `OnLogon`, `OnLogout`, `ToAdmin`, `FromAdmin`, `ToApp`, `FromApp`, `OnReject`
 
-### Phase 13: Admin Handlers
-- [x] Logon handler with ResetSeqNumFlag(141) support and seqnum gap checking
-- [x] Logout handler with graceful disconnect
-- [x] ResendRequest handler with GapFill for missing messages
-- [x] SequenceReset handler with GapFillFlag(123) support
-- [x] TestRequest handler sending Heartbeat replies with TestReqID(112)
-- [x] Refactored handlers to use queued Session.Send
+### Phase 11: State Machine & Logging
+- [x] Transition logging with `slog`
+- [x] Events: `ClientAccepted`, `InitiateReconnect`, `ReconnectFailedMax`
 
-### Phase 14: Heartbeat & Configuration
-- [x] HeartbeatMonitor - detects missed heartbeats, sends TestRequest, closes on timeout
-- [x] Engine-level heartbeat sender using SendMessage
-- [x] Read heartbeat_interval from config (default 30s)
-- [x] Read sender_comp_id and target_comp_id from config (defaults "S"/"T")
-- [x] Stamped headers: CompIDs, MsgSeqNum (via SeqManager), SendingTime
-- [x] Integration tests for logon+heartbeat and TestRequest escalation
+## Pending Phases (New Robustness Focus)
 
-### Phase 15: Session Lifecycle & Infrastructure (Partial)
-- [x] Session.OnClose callback for lifecycle hooks
-- [x] Session.abort() and robust Stop semantics
-- [x] Graceful session cleanup on connection loss
-- [ ] Application interface + callbacks (pending)
-- [ ] State machine missing events (pending)
-- [ ] Network send/receive abstractions (pending)
-- [ ] TLS cert loading from config (pending)
+### Phase 12: Robust Framing
+- [ ] Implement `BodyLength` (tag 9) based framing in `Session.readLoop`
+- [ ] Add unit tests for partial reads and "10=" in data fields
+- [ ] Remove naive `10=` splitting
 
-### Phase 16: Reconnect/Backoff Manager (NEW - COMPLETED)
-- [x] Exponential backoff with jitter (initial 1s, max 30s, doubles each retry)
-- [x] FixEngine.startReconnectLoop() - thread-safe reconnect using context
-- [x] Session.OnClose triggers reconnect when enabled
-- [x] SetReconnectParams(initial, max, enable) API for tuning
-- [x] enableReconnect flag defaults to false (test-safe)
-- [x] Integration test verifying reconnect logic
+### Phase 13: Sequential Processing
+- [ ] Remove per-message goroutines in `Session.readLoop`
+- [ ] Ensure `HandleIncoming` is called sequentially
+- [ ] Verify sequence integrity in integration tests
 
-## Completed Phases (45/43 todos done - exceeds initial estimate)
+### Phase 14: ResendRequest Hardening
+- [ ] Add `PossDupFlag(43)=Y` to replayed messages
+- [ ] Add `OrigSendingTime(122)` to replayed messages
+- [ ] Ensure replayed messages use original `MsgSeqNum`
+- [ ] Test edge cases for sequence gaps and `GapFill`
 
-### Phase 1-17: [Previous phases completed]
-- [All completed as documented above]
+### Phase 15: FIX Dictionary Validation
+- [x] Wire `FixSpec` into `Processor` for message validation
+- [x] Check for mandatory fields (tag 8, 9, 35, 49, 56, 34, 52, 10)
+- [x] Validate data types (int, float, UTCTimestamp)
 
-### Phase 18: State Machine Events (COMPLETED)
-- [x] Add event constants: EventClientAccepted, EventInitiateReconnect, EventReconnectFailedMax
-- [x] Implement transitions for new events in state machine
-- [x] slog logging on every state transition (INFO for changes, DEBUG for undefined)
-- [x] SetLogger() method for custom logger configuration
-- [x] Return errors on undefined state+event combinations
-- [x] Updated all OnEvent callers to handle error return value
-- [x] Comprehensive tests for new events and error handling
+### Phase 16: Acceptor Integration
+- [ ] Full `FixEngine` support for multiple concurrent sessions (Acceptor mode)
+- [ ] Standardized session ID format: `BeginString:SenderCompID:TargetCompID`
+- [ ] Integration test for multi-session acceptor
 
-## Pending Phases (3 todos remaining)
-
-### Phase 19: Network Abstractions
-- [ ] Conn wrapper with Send/SetReadDeadline
-- [ ] Per-client goroutine in Acceptor
-- [ ] Buffer size tuning (8192 bytes matching Python)
-
-### Phase 20: TLS/Certs from Config
-- [ ] network/tls.go LoadTLSConfig(certFile, keyFile, caFile)
-- [ ] Called by SetupComponents if config has ssl_* keys
-
-### Phase 21: ResendRequest/GapFill Hardening
-- [ ] Edge case tests for ResetSeqNumFlag
-- [ ] Incoming seq persistence scenarios
-- [ ] ResetSeqNumFlag interaction with GapFill
+### Phase 17: Package Reorganization
+- [ ] Move `engine/session.go` to `engine/session/`
+- [ ] Move `engine/processor.go` and handlers to `engine/handler/`
+- [ ] Clean up circular dependencies
 
 ## Test Coverage
-
-All phases have unit and integration tests:
-- `go test ./... -v` from gorewrite/ runs all 55+ tests
-- Phases 12-18 include integration tests with full TCP logon/heartbeat/reconnect/callback flows
-- Phase 17 test demonstrates all Application interface callbacks
-- Phase 18 tests cover new state machine events, logging, and error handling
-- All existing tests pass (green)
-- State transitions logged at INFO level for debugging
-
-## Key Architecture Decisions
-
-1. **Session Framing**: FIX frame boundaries detected by searching for "10=NNN<SOH>" checksum tag
-2. **Send Queue**: All outbound writes go via Session.sendCh to avoid concurrent writes
-3. **Header Stamping**: SendMessage centralizes tag 49/56 (CompIDs), 34 (MsgSeqNum), 52 (SendingTime)
-4. **Sequence Persistence**: SeqManager persists via store.SaveSessionSeq, survives restarts
-5. **Reconnect Policy**: Exponential backoff with jitter, configurable via SetReconnectParams
-6. **Test Safety**: Reconnect disabled by default; must explicitly call SetReconnectParams(..., enable=true)
+- [x] All 55+ existing tests passing
+- [ ] New tests for `BodyLength` framing
+- [ ] New tests for sequential processing
+- [ ] New tests for hardened `ResendRequest`
