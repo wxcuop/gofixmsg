@@ -89,7 +89,7 @@ func (h *HeartbeatMonitor) Start(ctx context.Context) {
 						})
 						tr.SetLenAndChecksum()
 						if h.engine != nil {
-							b, err := tr.ToWire()
+							_, err := tr.ToWire()
 							if err == nil {
 								_ = h.engine.SendMessage(tr)
 							}
