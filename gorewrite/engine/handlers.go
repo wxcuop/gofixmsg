@@ -100,11 +100,10 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 		hb := NewHeartbeatMessage(sender, target)
 		if trid != "" {
 			hb.Set(112, trid)
-			hb.SetLenAndChecksum()
+			// SendMessage will call SetLenAndChecksum via ToWire
 		}
 		if ctx.Engine != nil {
-			b, _ := hb.ToWire()
-			_ = ctx.Engine.SessionSend(b)
+			_ = ctx.Engine.SendMessage(hb)
 		}
 		return nil
 	})
@@ -166,6 +165,22 @@ func NewSequenceResetMessage(sender, target string, newSeq int, gapFill bool) *f
 
 // simple send helper (backwards compatible)
 func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error {
+	// ensure Sender/Target CompIDs are present
+	if !m.Contains(fixmsg.TagSenderCompID) {
+		sender := e.SenderCompID
+		if sender == "" {
+			sender = "S"
+		}
+		m.Set(fixmsg.TagSenderCompID, sender)
+	}
+	if !m.Contains(fixmsg.TagTargetCompID) {
+		target := e.TargetCompID
+		if target == "" {
+			target = "T"
+		}
+		m.Set(fixmsg.TagTargetCompID, target)
+	}
+
 	b, err := m.ToWire()
 	if err != nil {
 		return err
