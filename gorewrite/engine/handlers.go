@@ -46,7 +46,7 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 				ctx.Engine.SeqMgr.SetIncoming(1)
 			}
 		}
-		ctx.SM.OnEvent("logon_received")
+		_, _ = ctx.SM.OnEvent("logon_received")
 		// Call OnLogon callback
 		if ctx.Engine != nil && ctx.Engine.App != nil {
 			ctx.Engine.App.OnLogon(ctx.Engine.sessionID)
@@ -80,7 +80,7 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			}
 			_ = ctx.Engine.SendMessage(out)
 		}
-		ctx.SM.OnEvent("logout_received")
+		_, _ = ctx.SM.OnEvent("logout_received")
 		// Call OnLogout callback
 		if ctx.Engine != nil && ctx.Engine.App != nil {
 			ctx.Engine.App.OnLogout(ctx.Engine.sessionID)
