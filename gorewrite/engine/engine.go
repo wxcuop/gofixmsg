@@ -1,8 +1,10 @@
 package engine
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/network"
@@ -59,10 +61,32 @@ func (e *FixEngine) Connect() error {
 		return err
 	}
 	e.Conn = c
+	// create session and wire message callback to engine/monitor
+	s := NewSession(c, e.Proc)
+	e.Session = s
+	if e.Monitor == nil {
+		e.Monitor = NewHeartbeatMonitor(e, 30*time.Second, 30*time.Second)
+	}
+	// On inbound message, pass to engine and notify monitor
+	s.SetOnMessage(func(m *fixmsg.FixMessage) {
+		_ = e.HandleIncoming(m)
+		if e.Monitor != nil {
+			e.Monitor.Seen()
+		}
+	})
+	s.Start()
+	// start monitor
+	e.Monitor.Start(context.Background())
 	return nil
 }
 
 func (e *FixEngine) Close() error {
+	if e.Monitor != nil {
+		e.Monitor.Stop()
+	}
+	if e.Session != nil {
+		e.Session.Stop()
+	}
 	if e.Conn != nil {
 		return e.Conn.Close()
 	}
