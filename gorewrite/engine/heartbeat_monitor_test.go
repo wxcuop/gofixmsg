@@ -25,8 +25,8 @@ func TestHeartbeatMonitor_SendsTestRequestAndCloses(t *testing.T) {
 	s.Start()
 	defer s.Stop()
 
-	// create engine and attach session
-	e := &FixEngine{Session: s}
+	// create engine and attach session (configure comp ids for test)
+	e := &FixEngine{Session: s, SenderCompID: "CL", TargetCompID: "SV"}
 
 	// attach engine to monitor
 	mon := NewHeartbeatMonitor(e, 20*time.Millisecond, 40*time.Millisecond)
@@ -44,6 +44,9 @@ func TestHeartbeatMonitor_SendsTestRequestAndCloses(t *testing.T) {
 	out := buf[:n]
 	// should contain 35=1 (TestRequest)
 	require.Contains(t, string(out), "35=1")
+	// should contain configured CompIDs
+	require.Contains(t, string(out), "49=CL")
+	require.Contains(t, string(out), "56=SV")
 
 	// after TestRequest is sent, monitor should close session after timeout
 	// wait slightly longer than the TestReqTimeout
