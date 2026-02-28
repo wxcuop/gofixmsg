@@ -26,17 +26,20 @@ type Session struct {
 	wg        sync.WaitGroup
 	mu        sync.Mutex
 	closed    bool
+	// send queue
+	sendCh    chan []byte
 }
 
 func NewSession(conn net.Conn, p ProcessorIface) *Session {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Session{Conn: conn, Processor: p, ctx: ctx, cancel: cancel}
+	return &Session{Conn: conn, Processor: p, ctx: ctx, cancel: cancel, sendCh: make(chan []byte, 128)}
 }
 
-// Start begins the read loop and returns immediately.
+// Start begins the read and write loops and returns immediately.
 func (s *Session) Start() {
-	s.wg.Add(1)
+	s.wg.Add(2)
 	go s.readLoop()
+	go s.writeLoop()
 }
 
 // Stop signals shutdown and waits for goroutines to finish.
@@ -50,6 +53,7 @@ func (s *Session) Stop() {
 	s.mu.Unlock()
 	s.cancel()
 	_ = s.Conn.Close()
+	close(s.sendCh)
 	s.wg.Wait()
 }
 
@@ -82,16 +86,16 @@ func (s *Session) readLoop() {
 				// dispatch in goroutine to avoid blocking read loop
 				f := frame
 				s.wg.Add(1)
-				go func() {
+				go func(fb []byte) {
 					defer s.wg.Done()
-						// let codec parse and hand to processor
-					msg, err := codec.New(nil).Parse(f)
+					// let codec parse and hand to processor
+					msg, err := codec.New(nil).Parse(fb)
 					if err != nil {
 						// parsing failed; ignore or log in real implementation
 						return
 					}
 					_ = s.Processor.Process(msg)
-				}()
+				}(f)
 			}
 		}
 		if err != nil {
@@ -104,6 +108,37 @@ func (s *Session) readLoop() {
 			}
 			return
 		}
+	}
+}
+
+// writeLoop consumes sendCh and writes frames to the underlying connection.
+func (s *Session) writeLoop() {
+	defer s.wg.Done()
+	for {
+		select {
+		case <-s.ctx.Done():
+			return
+		case b, ok := <-s.sendCh:
+			if !ok {
+				return
+			}
+			_ = s.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			_, err := s.Conn.Write(b)
+			if err != nil {
+				_ = s.Conn.Close()
+				return
+			}
+		}
+	}
+}
+
+// Send enqueues a raw FIX frame (already with checksum) to the send queue.
+func (s *Session) Send(b []byte) error {
+	select {
+	case <-s.ctx.Done():
+		return io.ErrClosedPipe
+	case s.sendCh <- b:
+		return nil
 	}
 }
 
