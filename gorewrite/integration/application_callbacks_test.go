@@ -2,7 +2,6 @@ package integration
 
 import (
 	"fmt"
-	"net"
 	"testing"
 	"time"
 
@@ -27,7 +26,7 @@ func TestApplicationCallbacks(t *testing.T) {
 
 	// Server-side acceptor handler
 	acc := network.NewAcceptor("127.0.0.1:0")
-	handler := func(conn net.Conn) {
+	handler := func(conn *network.Conn) {
 		proc := engine.NewProcessor()
 		server := &engine.FixEngine{}
 		server.Proc = proc
@@ -35,7 +34,8 @@ func TestApplicationCallbacks(t *testing.T) {
 		// Send Logon from acceptor to initiator
 		im := engine.NewLogonMessage("SV", "CL")
 		if b, err := im.ToWire(); err == nil {
-			_, _ = conn.Write(b)
+			conn.Write(b)
+			conn.Flush() // Must flush buffered writes
 		}
 
 		// Register handlers for incoming messages

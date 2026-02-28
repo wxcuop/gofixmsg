@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"net"
 	"testing"
 	"time"
 
@@ -20,11 +19,12 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 	acc := network.NewAcceptor("127.0.0.1:0")
 	testReqCh := make(chan *fixmsg.FixMessage, 1)
 
-	handler := func(conn net.Conn) {
+	handler := func(conn *network.Conn) {
 		// send immediate Logon from acceptor to initiator
 		im := engine.NewLogonMessage("SV", "CL")
 		if b, err := im.ToWire(); err == nil {
-			_, _ = conn.Write(b)
+			conn.Write(b)
+			conn.Flush() // Must flush buffered writes
 		}
 
 		// processor that records TestRequest messages but does NOT reply

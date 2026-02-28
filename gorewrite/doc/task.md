@@ -84,16 +84,22 @@
 - [x] Updated all OnEvent callers to handle error return value
 - [x] Comprehensive tests for new events and error handling
 
-## Pending Phases (3 todos remaining)
+## Completed Phases (50/43 todos done - exceeds estimates)
 
-### Phase 19: Network Abstractions
-- [ ] Conn wrapper with Send/SetReadDeadline
-- [ ] Per-client goroutine in Acceptor
-- [ ] Buffer size tuning (8192 bytes matching Python)
+### Phase 1-18: [Previously completed]
+- [All completed as documented above]
 
-### Phase 20: TLS/Certs from Config
-- [ ] network/tls.go LoadTLSConfig(certFile, keyFile, caFile)
-- [ ] Called by SetupComponents if config has ssl_* keys
+### Phase 19-20: Network Abstractions & TLS/Certs (COMPLETED)
+- [x] Conn wrapper with Send/SetReadDeadline/SetWriteDeadline/Flush methods
+- [x] Per-client goroutine in Acceptor with sync.WaitGroup for clean shutdown
+- [x] Buffer size tuning (8192 bytes matching Python implementation)
+- [x] network/tls.go LoadTLSConfig(certFile, keyFile, caFile)
+- [x] TLS loading integration in SetupComponents (checks ssl_* config keys)
+- [x] Comprehensive unit tests for Conn wrapper, TLS loading, per-client handling
+- [x] Initiator and Acceptor updated to use Conn wrapper
+- [x] *Conn implements net.Conn interface for backward compatibility
+
+## Pending Phases (1 todo remaining)
 
 ### Phase 21: ResendRequest/GapFill Hardening
 - [ ] Edge case tests for ResetSeqNumFlag

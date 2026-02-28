@@ -72,6 +72,7 @@ func NewFixEngine(init *network.Initiator) *FixEngine {
 }
 
 // SetupComponents wires state machine and store into the engine and registers handlers.
+// Also loads TLS configuration from config if ssl_* keys are present.
 func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	e.SM = sm
 	e.Store = st
@@ -106,6 +107,22 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 				e.TargetCompID = v
 			} else {
 				e.TargetCompID = "T"
+			}
+		}
+		// Load TLS configuration if ssl_* keys are present
+		certFile := mgr.Get("", "ssl_cert_file")
+		keyFile := mgr.Get("", "ssl_key_file")
+		caFile := mgr.Get("", "ssl_ca_file")
+		if certFile != "" {
+			tlsCfg, err := network.LoadTLSConfig(certFile, keyFile, caFile)
+			if err != nil {
+				fmt.Printf("warning: failed to load TLS config: %v\n", err)
+			} else if tlsCfg != nil {
+				// Apply TLS config to Initiator if present
+				if e.Initiator != nil {
+					e.Initiator.WithTLS(tlsCfg)
+				}
+				// Note: Acceptor TLS is set separately via AcceptorWithTLS() if needed
 			}
 		}
 	}
