@@ -113,6 +113,13 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	RegisterDefaultHandlers(e.Proc, ctx)
 }
 
+// SetReconnectParams configures reconnect/backoff policy
+func (e *FixEngine) SetReconnectParams(initial, max time.Duration, enable bool) {
+	e.reconnectInitial = initial
+	e.reconnectMax = max
+	e.enableReconnect = enable
+}
+
 func (e *FixEngine) Connect() error {
 	if e.Initiator == nil {
 		return fmt.Errorf("no initiator configured")
