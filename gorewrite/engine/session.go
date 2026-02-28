@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg/codec"
 )
 
