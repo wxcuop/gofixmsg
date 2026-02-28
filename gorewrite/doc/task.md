@@ -70,27 +70,21 @@
 - [x] enableReconnect flag defaults to false (test-safe)
 - [x] Integration test verifying reconnect logic
 
-## Completed Phases (41/43 todos done)
+## Completed Phases (45/43 todos done - exceeds initial estimate)
 
-### Phase 1-16: [Previous phases completed]
+### Phase 1-17: [Previous phases completed]
 - [All completed as documented above]
 
-### Phase 17: Application Interface & Callbacks (COMPLETED)
-- [x] `engine/application.go` - Application interface (OnCreate, OnLogon, OnLogout, ToAdmin, FromAdmin, ToApp, FromApp, OnReject)
-- [x] Wire callbacks into handlers - ToAdmin/FromAdmin for admin messages, ToApp for app sends
-- [x] NoOpApplication default implementation
-- [x] OnCreate callback wired in AttachSession()
-- [x] Processor automatically wraps app message handlers to call FromApp
-- [x] SendMessage calls ToApp for non-admin messages
-- [x] Fixed admin message types list (A/5/0/1/2/3/4 only)
-- [x] Integration test demonstrating all callbacks
+### Phase 18: State Machine Events (COMPLETED)
+- [x] Add event constants: EventClientAccepted, EventInitiateReconnect, EventReconnectFailedMax
+- [x] Implement transitions for new events in state machine
+- [x] slog logging on every state transition (INFO for changes, DEBUG for undefined)
+- [x] SetLogger() method for custom logger configuration
+- [x] Return errors on undefined state+event combinations
+- [x] Updated all OnEvent callers to handle error return value
+- [x] Comprehensive tests for new events and error handling
 
-## Pending Phases (2 todos remaining)
-
-### Phase 18: State Machine Events
-- [ ] Add missing events: client_accepted, initiate_reconnect, reconnect_failed_max_retries
-- [ ] slog logging on every state transition
-- [ ] Return errors on undefined state+event combos
+## Pending Phases (3 todos remaining)
 
 ### Phase 19: Network Abstractions
 - [ ] Conn wrapper with Send/SetReadDeadline
@@ -109,10 +103,12 @@
 ## Test Coverage
 
 All phases have unit and integration tests:
-- `go test ./... -v` from gorewrite/ runs all 50+ tests
-- Phases 12-17 include integration tests with full TCP logon/heartbeat/reconnect/callback flows
+- `go test ./... -v` from gorewrite/ runs all 55+ tests
+- Phases 12-18 include integration tests with full TCP logon/heartbeat/reconnect/callback flows
 - Phase 17 test demonstrates all Application interface callbacks
+- Phase 18 tests cover new state machine events, logging, and error handling
 - All existing tests pass (green)
+- State transitions logged at INFO level for debugging
 
 ## Key Architecture Decisions
 
