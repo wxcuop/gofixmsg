@@ -40,6 +40,7 @@ type FixEngine struct {
 	reconnectWG      sync.WaitGroup
 	reconnectInitial time.Duration
 	reconnectMax     time.Duration
+	enableReconnect  bool // disable for tests by default
 }
 
 func (e *FixEngine) SessionSend(b []byte) error {

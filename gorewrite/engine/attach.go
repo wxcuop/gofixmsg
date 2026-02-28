@@ -27,8 +27,8 @@ func (e *FixEngine) AttachSession(s *Session) error {
 		go func() {
 			// ensure we stop monitor/hb sender and clear session
 			e.DetachSession()
-			// if this engine has an Initiator configured, start reconnect loop
-			if e.Initiator != nil {
+			// if this engine has an Initiator configured and reconnect enabled, start reconnect loop
+			if e.enableReconnect && e.Initiator != nil {
 				e.startReconnectLoop()
 			}
 		}()
