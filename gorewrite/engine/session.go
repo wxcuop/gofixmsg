@@ -28,6 +28,12 @@ type Session struct {
 	closed    bool
 	// send queue
 	sendCh    chan []byte
+	// OnMessage, if set, is called for each parsed inbound message instead of Processor.Process
+	OnMessage func(*fixmsg.FixMessage)
+}
+
+func (s *Session) SetOnMessage(fn func(*fixmsg.FixMessage)) {
+	s.OnMessage = fn
 }
 
 func NewSession(conn net.Conn, p ProcessorIface) *Session {
@@ -94,7 +100,11 @@ func (s *Session) readLoop() {
 						// parsing failed; ignore or log in real implementation
 						return
 					}
-					_ = s.Processor.Process(msg)
+					if s.OnMessage != nil {
+						s.OnMessage(msg)
+					} else {
+						_ = s.Processor.Process(msg)
+					}
 				}(f)
 			}
 		}
