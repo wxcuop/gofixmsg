@@ -78,13 +78,13 @@ func (s *Session) readLoop() {
 				s.wg.Add(1)
 				go func() {
 					defer s.wg.Done()
-					// let codec parse and hand to processor
-					msg, err := codec.Parse(f)
+						// let codec parse and hand to processor
+					msg, err := codec.New(nil).Parse(f)
 					if err != nil {
 						// parsing failed; ignore or log in real implementation
 						return
 					}
-					s.Processor.HandleIncoming(msg)
+					_ = s.Processor.Process(msg)
 				}()
 			}
 		}

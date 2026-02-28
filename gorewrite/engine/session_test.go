@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"io"
 	"net"
 	"testing"
 	"time"
@@ -14,11 +13,12 @@ type fakeProcessor struct{
 	ch chan *fixmsg.FixMessage
 }
 
-func (f *fakeProcessor) HandleIncoming(m *fixmsg.FixMessage) {
+func (f *fakeProcessor) Process(m *fixmsg.FixMessage) error {
 	f.ch <- m
+	return nil
 }
 
-func (f *fakeProcessor) HandleOutgoing(m *fixmsg.FixMessage) {}
+func (f *fakeProcessor) Register(msgType string, fn func(*fixmsg.FixMessage) error) {}
 
 func TestSessionPartialRead(t *testing.T) {
 	r1, w1 := net.Pipe()
