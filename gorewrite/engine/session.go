@@ -11,10 +11,15 @@ import (
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg/codec"
 )
 
+// ProcessorIface is the minimal interface Session requires from a processor.
+type ProcessorIface interface {
+	Process(*fixmsg.FixMessage) error
+}
+
 // Session manages the TCP connection, framing and dispatch to a Processor.
 type Session struct {
 	Conn      net.Conn
-	Processor Processor
+	Processor ProcessorIface
 	ctx       context.Context
 	cancel    context.CancelFunc
 	wg        sync.WaitGroup
@@ -22,7 +27,7 @@ type Session struct {
 	closed    bool
 }
 
-func NewSession(conn net.Conn, p Processor) *Session {
+func NewSession(conn net.Conn, p ProcessorIface) *Session {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Session{Conn: conn, Processor: p, ctx: ctx, cancel: cancel}
 }
