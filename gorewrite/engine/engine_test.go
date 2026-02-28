@@ -1,29 +1,29 @@
 package engine_test
 
 import (
-"net"
-"testing"
-"time"
+	"net"
+	"testing"
+	"time"
 
-"github.com/stretchr/testify/require"
-"github.com/wxcuop/pyfixmsg_plus/engine"
-"github.com/wxcuop/pyfixmsg_plus/network"
+	"github.com/stretchr/testify/require"
+	"github.com/wxcuop/pyfixmsg_plus/engine"
+	"github.com/wxcuop/pyfixmsg_plus/network"
 )
 
 func TestEngineConnect(t *testing.T) {
-ln, err := net.Listen("tcp", "127.0.0.1:0")
-require.NoError(t, err)
-defer ln.Close()
-addr := ln.Addr().String()
-// accept in background
-go func(){
-c, _ := ln.Accept()
-defer c.Close()
-// wait a bit
-time.Sleep(10 * time.Millisecond)
-}()
-init := network.NewInitiator(addr)
-e := engine.NewFixEngine(init)
-require.NoError(t, e.Connect())
-defer e.Close()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer ln.Close()
+	addr := ln.Addr().String()
+	// accept in background
+	go func() {
+		c, _ := ln.Accept()
+		defer c.Close()
+		// wait a bit
+		time.Sleep(10 * time.Millisecond)
+	}()
+	init := network.NewInitiator(addr)
+	e := engine.NewFixEngine(init)
+	require.NoError(t, e.Connect())
+	defer e.Close()
 }
