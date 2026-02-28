@@ -33,7 +33,7 @@ func TestHeartbeatMonitor_SendsTestRequestAndCloses(t *testing.T) {
 	e.Monitor = mon
 
 	// start monitor
-	mon.Start(nil)
+	mon.Start(context.Background())
 	defer mon.Stop()
 
 	// expect a TestRequest to be sent within ~100ms
@@ -49,8 +49,8 @@ func TestHeartbeatMonitor_SendsTestRequestAndCloses(t *testing.T) {
 	// wait slightly longer than the TestReqTimeout
 	time.Sleep(80 * time.Millisecond)
 
-	// further reads should return EOF because session.Stop closed the local side
+	// further reads should return an error because session.Stop closed the local side
 	peer.SetReadDeadline(time.Now().Add(200 * time.Millisecond))
 	_, err = peer.Read(buf)
-	require.True(t, err == io.EOF || err != nil)
+	require.Error(t, err)
 }
