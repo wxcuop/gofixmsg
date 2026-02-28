@@ -20,6 +20,15 @@ type HandlerContext struct {
 // RegisterDefaultHandlers registers Logon/Logout/Resend/TestRequest and basic admin handlers.
 func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 	p.Register("A", func(m *fixmsg.FixMessage) error { // Logon
+		// Call FromAdmin callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			if err := ctx.Engine.App.FromAdmin(m, ctx.Engine.sessionID); err != nil {
+				if ctx.Engine.App != nil {
+					ctx.Engine.App.OnReject(m, fmt.Sprintf("FromAdmin rejected: %v", err), ctx.Engine.sessionID)
+				}
+				return err
+			}
+		}
 		// If ResetSeqNumFlag=Y reset seq nums to 1
 		if v, _ := m.Get(141); v == "Y" {
 			if ctx.Engine != nil && ctx.Store != nil {
@@ -28,22 +37,57 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			}
 		}
 		ctx.SM.OnEvent("logon_received")
+		// Call OnLogon callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			ctx.Engine.App.OnLogon(ctx.Engine.sessionID)
+		}
 		return nil
 	})
 
 	p.Register("5", func(m *fixmsg.FixMessage) error { // Logout
+		// Call FromAdmin callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			if err := ctx.Engine.App.FromAdmin(m, ctx.Engine.sessionID); err != nil {
+				if ctx.Engine.App != nil {
+					ctx.Engine.App.OnReject(m, fmt.Sprintf("FromAdmin rejected: %v", err), ctx.Engine.sessionID)
+				}
+				return err
+			}
+		}
 		// reply with Logout if we have an engine
 		if ctx.Engine != nil {
 			sender, _ := m.Get(56) // note: incoming Target becomes our Sender
 			target, _ := m.Get(49)
 			out := NewLogoutMessage(sender, target)
+			// Call ToAdmin callback
+			if ctx.Engine.App != nil {
+				if err := ctx.Engine.App.ToAdmin(out, ctx.Engine.sessionID); err != nil {
+					if ctx.Engine.App != nil {
+						ctx.Engine.App.OnReject(out, fmt.Sprintf("ToAdmin rejected: %v", err), ctx.Engine.sessionID)
+					}
+					return err
+				}
+			}
 			_ = ctx.Engine.SendMessage(out)
 		}
 		ctx.SM.OnEvent("logout_received")
+		// Call OnLogout callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			ctx.Engine.App.OnLogout(ctx.Engine.sessionID)
+		}
 		return nil
 	})
 
 	p.Register("2", func(m *fixmsg.FixMessage) error { // ResendRequest
+		// Call FromAdmin callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			if err := ctx.Engine.App.FromAdmin(m, ctx.Engine.sessionID); err != nil {
+				if ctx.Engine.App != nil {
+					ctx.Engine.App.OnReject(m, fmt.Sprintf("FromAdmin rejected: %v", err), ctx.Engine.sessionID)
+				}
+				return err
+			}
+		}
 		b, _ := m.Get(7)
 		e, _ := m.Get(16)
 		if b == "" {
@@ -70,6 +114,15 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			} else {
 				// missing: send SequenceReset as GapFill to advance
 				sr := NewSequenceResetMessage(target, sender, seq+1, true)
+				// Call ToAdmin callback
+				if ctx.Engine.App != nil {
+					if err := ctx.Engine.App.ToAdmin(sr, ctx.Engine.sessionID); err != nil {
+						if ctx.Engine.App != nil {
+							ctx.Engine.App.OnReject(sr, fmt.Sprintf("ToAdmin rejected: %v", err), ctx.Engine.sessionID)
+						}
+						continue
+					}
+				}
 				if ctx.Engine != nil {
 					_ = ctx.Engine.SendMessage(sr)
 				}
@@ -79,6 +132,15 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 	})
 
 	p.Register("4", func(m *fixmsg.FixMessage) error { // SequenceReset
+		// Call FromAdmin callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			if err := ctx.Engine.App.FromAdmin(m, ctx.Engine.sessionID); err != nil {
+				if ctx.Engine.App != nil {
+					ctx.Engine.App.OnReject(m, fmt.Sprintf("FromAdmin rejected: %v", err), ctx.Engine.sessionID)
+				}
+				return err
+			}
+		}
 		// NewSeqNo tag 36
 		if v, _ := m.Get(36); v != "" {
 			n, _ := strconv.Atoi(v)
@@ -90,6 +152,15 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 	})
 
 	p.Register("1", func(m *fixmsg.FixMessage) error { // TestRequest
+		// Call FromAdmin callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			if err := ctx.Engine.App.FromAdmin(m, ctx.Engine.sessionID); err != nil {
+				if ctx.Engine.App != nil {
+					ctx.Engine.App.OnReject(m, fmt.Sprintf("FromAdmin rejected: %v", err), ctx.Engine.sessionID)
+				}
+				return err
+			}
+		}
 		// reply with Heartbeat containing TestReqID
 		trid, _ := m.Get(112)
 		sender, _ := m.Get(56)
@@ -99,6 +170,15 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			hb.Set(112, trid)
 			// SendMessage will call SetLenAndChecksum via ToWire
 		}
+		// Call ToAdmin callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			if err := ctx.Engine.App.ToAdmin(hb, ctx.Engine.sessionID); err != nil {
+				if ctx.Engine.App != nil {
+					ctx.Engine.App.OnReject(hb, fmt.Sprintf("ToAdmin rejected: %v", err), ctx.Engine.sessionID)
+				}
+				return err
+			}
+		}
 		if ctx.Engine != nil {
 			_ = ctx.Engine.SendMessage(hb)
 		}
@@ -106,7 +186,15 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 	})
 
 	p.Register("0", func(m *fixmsg.FixMessage) error { // Heartbeat
-		// no-op but could validate TestReqID presence
+		// Call FromAdmin callback
+		if ctx.Engine != nil && ctx.Engine.App != nil {
+			if err := ctx.Engine.App.FromAdmin(m, ctx.Engine.sessionID); err != nil {
+				if ctx.Engine.App != nil {
+					ctx.Engine.App.OnReject(m, fmt.Sprintf("FromAdmin rejected: %v", err), ctx.Engine.sessionID)
+				}
+				return err
+			}
+		}
 		return nil
 	})
 }

@@ -41,6 +41,10 @@ type FixEngine struct {
 	reconnectInitial time.Duration
 	reconnectMax     time.Duration
 	enableReconnect  bool // disable for tests by default
+	// application callbacks
+	App Application
+	// session ID for callbacks
+	sessionID string
 }
 
 func (e *FixEngine) SessionSend(b []byte) error {
@@ -62,6 +66,8 @@ func NewFixEngine(init *network.Initiator) *FixEngine {
 	// default reconnect parameters
 	fe.reconnectInitial = 1 * time.Second
 	fe.reconnectMax = 30 * time.Second
+	// default to NoOpApplication
+	fe.App = &NoOpApplication{}
 	return fe
 }
 
@@ -111,6 +117,7 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	e.heartbeatInterval = time.Duration(intervalSec) * time.Second
 	ctx := &HandlerContext{SM: sm, Store: st, Engine: e}
 	RegisterDefaultHandlers(e.Proc, ctx)
+	// Note: OnCreate callback should be called after session is attached, not here
 }
 
 // SetReconnectParams configures reconnect/backoff policy
@@ -118,6 +125,18 @@ func (e *FixEngine) SetReconnectParams(initial, max time.Duration, enable bool) 
 	e.reconnectInitial = initial
 	e.reconnectMax = max
 	e.enableReconnect = enable
+}
+
+// SetApplication sets the application callback handler.
+func (e *FixEngine) SetApplication(app Application) {
+	if app != nil {
+		e.App = app
+	}
+}
+
+// SetSessionID sets the session ID for application callbacks.
+func (e *FixEngine) SetSessionID(sid string) {
+	e.sessionID = sid
 }
 
 func (e *FixEngine) Connect() error {
