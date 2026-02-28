@@ -9,7 +9,7 @@ import (
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 )
 
-type fakeProcessor struct{
+type fakeProcessor struct {
 	ch chan *fixmsg.FixMessage
 }
 

@@ -9,11 +9,11 @@ import (
 
 // SeqManager manages incoming and outgoing sequence numbers and persists them to store.
 type SeqManager struct {
-	mu sync.Mutex
-	in  int
-	out int
+	mu    sync.Mutex
+	in    int
+	out   int
 	store store.Store
-	sid  string // session id used for storing seqs
+	sid   string // session id used for storing seqs
 }
 
 func NewSeqManager(st store.Store, sessionID string) *SeqManager {

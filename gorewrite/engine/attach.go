@@ -22,6 +22,17 @@ func (e *FixEngine) AttachSession(s *Session) error {
 			e.Monitor.Seen()
 		}
 	})
+	// on session close, detach and optionally start reconnect loop in a goroutine
+	s.SetOnClose(func() {
+		go func() {
+			// ensure we stop monitor/hb sender and clear session
+			e.DetachSession()
+			// if this engine has an Initiator configured, start reconnect loop
+			if e.Initiator != nil {
+				e.startReconnectLoop()
+			}
+		}()
+	})
 	s.Start()
 	// ensure monitor present
 	if e.Monitor == nil {
