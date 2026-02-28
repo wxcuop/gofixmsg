@@ -36,7 +36,10 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			sender, _ := m.Get(56) // note: incoming Target becomes our Sender
 			target, _ := m.Get(49)
 			out := NewLogoutMessage(sender, target)
-			_ = ctx.Engine.SessionSend(out.ToWire())
+			b, err := out.ToWire()
+			if err == nil {
+				_ = ctx.Engine.SessionSend(b)
+			}
 		}
 		ctx.SM.OnEvent("logout_received")
 		return nil
