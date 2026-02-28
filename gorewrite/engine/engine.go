@@ -21,6 +21,7 @@ type FixEngine struct {
 	SM        *state.StateMachine
 	Store     store.Store
 	SeqMgr    *SeqManager
+	Monitor   *HeartbeatMonitor
 }
 
 func (e *FixEngine) SessionSend(b []byte) error {
