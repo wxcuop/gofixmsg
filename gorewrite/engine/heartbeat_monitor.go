@@ -68,11 +68,23 @@ func (h *HeartbeatMonitor) Start(ctx context.Context) {
 					if !out {
 						// send TestRequest
 						id := fmt.Sprintf("TR-%d", time.Now().UnixNano())
+						// determine comp ids from engine if available
+						sender := "S"
+						target := "T"
+						if h.engine != nil {
+							if h.engine.SenderCompID != "" {
+								sender = h.engine.SenderCompID
+							}
+							if h.engine.TargetCompID != "" {
+								target = h.engine.TargetCompID
+							}
+						}
+
 						tr := fixmsg.NewFixMessageFromMap(map[int]string{
-							8:  "FIX.4.4",
-							35: "1",
-							49: "S",
-							56: "T",
+							8:   "FIX.4.4",
+							35:  "1",
+							49:  sender,
+							56:  target,
 							112: id,
 						})
 						tr.SetLenAndChecksum()

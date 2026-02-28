@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"strconv"
@@ -25,6 +24,9 @@ type FixEngine struct {
 	Store     store.Store
 	SeqMgr    *SeqManager
 	Monitor   *HeartbeatMonitor
+	// configured CompIDs for outgoing admin messages
+	SenderCompID string
+	TargetCompID string
 	// heartbeat sender
 	hbSender          *heartbeat.Heartbeat
 	heartbeatInterval time.Duration
@@ -55,7 +57,7 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 		sid = e.Initiator.Addr
 	}
 	e.SeqMgr = NewSeqManager(st, sid)
-	// read heartbeat interval from config manager if present
+	// read heartbeat interval and comp ids from config manager if present
 	mgr := config.GetManager()
 	intervalSec := 30
 	if mgr != nil {
@@ -64,6 +66,28 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 				intervalSec = n
 			}
 		}
+		// only set comp ids if not already configured on engine
+		if e.SenderCompID == "" {
+			if v := mgr.Get("", "sender_comp_id"); v != "" {
+				e.SenderCompID = v
+			} else {
+				e.SenderCompID = "S"
+			}
+		}
+		if e.TargetCompID == "" {
+			if v := mgr.Get("", "target_comp_id"); v != "" {
+				e.TargetCompID = v
+			} else {
+				e.TargetCompID = "T"
+			}
+		}
+	}
+	// ensure defaults
+	if e.SenderCompID == "" {
+		e.SenderCompID = "S"
+	}
+	if e.TargetCompID == "" {
+		e.TargetCompID = "T"
 	}
 	e.heartbeatInterval = time.Duration(intervalSec) * time.Second
 	ctx := &HandlerContext{SM: sm, Store: st, Engine: e}

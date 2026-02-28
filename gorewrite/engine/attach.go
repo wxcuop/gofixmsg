@@ -37,8 +37,16 @@ func (e *FixEngine) AttachSession(s *Session) error {
 			interval = 30 * time.Second
 		}
 		e.hbSender = heartbeat.New(interval, func() {
-			// send a minimal heartbeat
-			hb := NewHeartbeatMessage("S", "T")
+			// send a minimal heartbeat using configured comp ids
+			sender := e.SenderCompID
+			target := e.TargetCompID
+			if sender == "" {
+				sender = "S"
+			}
+			if target == "" {
+				target = "T"
+			}
+			hb := NewHeartbeatMessage(sender, target)
 			hb.SetLenAndChecksum()
 			b, _ := hb.ToWire()
 			_ = e.SessionSend(b)
