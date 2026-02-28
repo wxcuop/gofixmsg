@@ -10,6 +10,16 @@ import (
 	"github.com/wxcuop/pyfixmsg_plus/store"
 )
 
+// isAdminMessageType checks if a message is an admin message based on MsgType (tag 35).
+func isAdminMessageType(msgType string) bool {
+	switch msgType {
+	case "A", "5", "0", "1", "2", "3", "4":
+		return true
+	default:
+		return false
+	}
+}
+
 // Handlers have access to engine components via the context struct.
 type HandlerContext struct {
 	SM     *state.StateMachine
@@ -280,6 +290,19 @@ func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error {
 	// stamp SendingTime if missing
 	if !m.Contains(fixmsg.TagSendingTime) {
 		m.Set(fixmsg.TagSendingTime, time.Now().UTC().Format("20060102-15:04:05.000"))
+	}
+
+	// Call ToApp callback for non-admin messages (admin callbacks are called by handlers/callers)
+	msgType, _ := m.Get(35)
+	if msgType != "" && !isAdminMessageType(msgType) {
+		if e.App != nil {
+			if err := e.App.ToApp(m, e.sessionID); err != nil {
+				if e.App != nil {
+					e.App.OnReject(m, fmt.Sprintf("ToApp rejected: %v", err), e.sessionID)
+				}
+				return err
+			}
+		}
 	}
 
 	b, err := m.ToWire()

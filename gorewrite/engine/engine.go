@@ -76,6 +76,8 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	e.SM = sm
 	e.Store = st
 	e.Proc = NewProcessor()
+	// set application on processor for FromApp callbacks
+	e.Proc.SetApplication(e.App)
 	// create sequence manager with a session id derived from initiator address if present
 	sid := "default"
 	if e.Initiator != nil && e.Initiator.Addr != "" {

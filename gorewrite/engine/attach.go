@@ -15,6 +15,10 @@ func (e *FixEngine) AttachSession(s *Session) error {
 		return fmt.Errorf("nil session")
 	}
 	e.Session = s
+	// Call OnCreate callback
+	if e.App != nil {
+		e.App.OnCreate(e.sessionID)
+	}
 	// wire inbound message handling to engine and monitor
 	s.SetOnMessage(func(m *fixmsg.FixMessage) {
 		_ = e.HandleIncoming(m)

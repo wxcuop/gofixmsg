@@ -16,7 +16,7 @@ type Application interface {
 	// OnLogout is called after a logout.
 	OnLogout(sessionID string)
 
-	// ToAdmin is called just before an admin message (35=A/5/0/1/2/3/4/5/8/9/D/AE) is sent.
+	// ToAdmin is called just before an admin message (35=A/5/0/1/2/3/4) is sent.
 	// The application may modify the message or return error to reject sending.
 	ToAdmin(msg *fixmsg.FixMessage, sessionID string) error
 
