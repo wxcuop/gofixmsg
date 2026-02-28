@@ -70,12 +70,22 @@
 - [x] enableReconnect flag defaults to false (test-safe)
 - [x] Integration test verifying reconnect logic
 
-## Pending Phases (6 todos remaining)
+## Completed Phases (41/43 todos done)
 
-### Phase 17: Application Interface & Callbacks
-- [ ] `engine/application.go` - Application interface (OnCreate, OnLogon, OnLogout, ToAdmin, FromAdmin, ToApp, FromApp, OnReject)
-- [ ] Wire callbacks into handlers
-- [ ] NoOpApplication default implementation
+### Phase 1-16: [Previous phases completed]
+- [All completed as documented above]
+
+### Phase 17: Application Interface & Callbacks (COMPLETED)
+- [x] `engine/application.go` - Application interface (OnCreate, OnLogon, OnLogout, ToAdmin, FromAdmin, ToApp, FromApp, OnReject)
+- [x] Wire callbacks into handlers - ToAdmin/FromAdmin for admin messages, ToApp for app sends
+- [x] NoOpApplication default implementation
+- [x] OnCreate callback wired in AttachSession()
+- [x] Processor automatically wraps app message handlers to call FromApp
+- [x] SendMessage calls ToApp for non-admin messages
+- [x] Fixed admin message types list (A/5/0/1/2/3/4 only)
+- [x] Integration test demonstrating all callbacks
+
+## Pending Phases (2 todos remaining)
 
 ### Phase 18: State Machine Events
 - [ ] Add missing events: client_accepted, initiate_reconnect, reconnect_failed_max_retries
@@ -99,8 +109,9 @@
 ## Test Coverage
 
 All phases have unit and integration tests:
-- `go test ./... -v` from gorewrite/ runs all 42+ tests
-- Phases 12-16 include integration tests with full TCP logon/heartbeat/reconnect flows
+- `go test ./... -v` from gorewrite/ runs all 50+ tests
+- Phases 12-17 include integration tests with full TCP logon/heartbeat/reconnect/callback flows
+- Phase 17 test demonstrates all Application interface callbacks
 - All existing tests pass (green)
 
 ## Key Architecture Decisions
