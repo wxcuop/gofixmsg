@@ -27,8 +27,9 @@ func TestSessionPartialRead(t *testing.T) {
 	s.Start()
 	defer s.Stop()
 
-	// craft simple FIX message with SOH as \x01; use BeginString, BodyLength, MsgType, Checksum minimal
-	msg := "8=FIX.4.2\x019=12\x0135=0\x0110=220\x01" // checksum intentionally arbitrary for parse to accept or reject
+	// craft simple FIX message: 8=FIX.4.2\x019=5\x0135=0\x0110=000\x01
+	// BodyLength=5 for body "35=0\x01" (4+1 bytes)
+	msg := "8=FIX.4.2\x019=5\x0135=0\x0110=000\x01"
 
 	// write in two parts to simulate partial TCP frames
 	_, err := w1.Write([]byte(msg[:10]))
