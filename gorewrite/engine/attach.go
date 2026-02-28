@@ -47,9 +47,7 @@ func (e *FixEngine) AttachSession(s *Session) error {
 				target = "T"
 			}
 			hb := NewHeartbeatMessage(sender, target)
-			hb.SetLenAndChecksum()
-			b, _ := hb.ToWire()
-			_ = e.SessionSend(b)
+			_ = e.SendMessage(hb)
 		})
 		e.hbSender.Start(context.Background())
 	}

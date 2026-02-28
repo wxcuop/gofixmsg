@@ -32,8 +32,7 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 			sender, _ := m.Get(56)
 			target, _ := m.Get(49)
 			out := engine.NewLogonMessage(sender, target)
-			b, _ := out.ToWire()
-			_ = server.SessionSend(b)
+			_ = server.SendMessage(out)
 			return nil
 		})
 		// create session

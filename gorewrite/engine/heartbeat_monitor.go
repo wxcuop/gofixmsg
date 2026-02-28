@@ -91,7 +91,7 @@ func (h *HeartbeatMonitor) Start(ctx context.Context) {
 						if h.engine != nil {
 							b, err := tr.ToWire()
 							if err == nil {
-								_ = h.engine.SessionSend(b)
+								_ = h.engine.SendMessage(tr)
 							}
 						}
 						h.mu.Lock()

@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/state"
@@ -36,10 +37,7 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			sender, _ := m.Get(56) // note: incoming Target becomes our Sender
 			target, _ := m.Get(49)
 			out := NewLogoutMessage(sender, target)
-			b, err := out.ToWire()
-			if err == nil {
-				_ = ctx.Engine.SessionSend(b)
-			}
+			_ = ctx.Engine.SendMessage(out)
 		}
 		ctx.SM.OnEvent("logout_received")
 		return nil
@@ -73,8 +71,7 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 				// missing: send SequenceReset as GapFill to advance
 				sr := NewSequenceResetMessage(target, sender, seq+1, true)
 				if ctx.Engine != nil {
-					b, _ := sr.ToWire()
-					_ = ctx.Engine.SessionSend(b)
+					_ = ctx.Engine.SendMessage(sr)
 				}
 			}
 		}
@@ -179,6 +176,22 @@ func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error {
 			target = "T"
 		}
 		m.Set(fixmsg.TagTargetCompID, target)
+	}
+
+	// stamp MsgSeqNum if missing
+	if !m.Contains(fixmsg.TagMsgSeqNum) {
+		seq := 1
+		if e.SeqMgr != nil {
+			if n, err := e.SeqMgr.IncrementOutgoing(); err == nil {
+				seq = n
+			}
+		}
+		m.Set(fixmsg.TagMsgSeqNum, strconv.Itoa(seq))
+	}
+
+	// stamp SendingTime if missing
+	if !m.Contains(fixmsg.TagSendingTime) {
+		m.Set(fixmsg.TagSendingTime, time.Now().UTC().Format("20060102-15:04:05.000"))
 	}
 
 	b, err := m.ToWire()
