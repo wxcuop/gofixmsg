@@ -143,5 +143,45 @@ Each task is marked with its phase, estimated complexity (S/M/L/XL), and blockin
 |----|------|-----------|------------|
 | P11-01 | Update CI workflow to build and test Go module | S | P9-09 |
 | P11-02 | Update `copilot-instructions.md` to document Go module structure | S | P11-01 |
-| P11-03 | Move Python source to `_python_archive/` | S | P11-01 |
-| P11-04 | Remove Python-only CI steps | S | P11-03 |
+
+---
+
+## Phase 12 — Session Foundations
+
+| ID | Task | Complexity | Depends On |
+|----|------|-----------|------------|
+| P12-01 | Sequence number manager (`engine/seqnum.go`) | M | P4-02 |
+| P12-02 | Message framing / read loop (`engine/session.go`) | L | P12-01 |
+| P12-03 | Session run loop + reconnect (`engine/runloop.go`) | L | P12-02, P13-01 |
+
+---
+
+## Phase 13 — Full FIX Handlers
+
+| ID | Task | Complexity | Depends On |
+|----|------|-----------|------------|
+| P13-01 | TestRequest handler | S | P7-01 |
+| P13-02 | Full Logon handler | L | P12-01, P14-01 |
+| P13-03 | Full Logout handler | M | P13-02 |
+| P13-04 | ResendRequest handler | L | P12-01, P4-05 |
+| P13-05 | SequenceReset handler | M | P12-01 |
+
+---
+
+## Phase 14 — Heartbeat & Application
+
+| ID | Task | Complexity | Depends On |
+|----|------|-----------|------------|
+| P14-01 | Application interface + callbacks | M | P9-01 |
+| P14-02 | Full heartbeat monitor (TestRequest escalation) | M | P14-01, P8-01 |
+
+---
+
+## Phase 15 — Network polish & State machine
+
+| ID | Task | Complexity | Depends On |
+|----|------|-----------|------------|
+| P15-01 | State machine missing events + logging | S | P5-03 |
+| P15-02 | Network send/receive abstractions (`network/conn.go`) | M | P6-01 |
+| P15-03 | TLS cert loading from config | S | P15-02 |
+
