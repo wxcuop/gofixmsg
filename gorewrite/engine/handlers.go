@@ -36,7 +36,7 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			sender, _ := m.Get(56) // note: incoming Target becomes our Sender
 			target, _ := m.Get(49)
 			out := NewLogoutMessage(sender, target)
-			_ = ctx.Engine.SendMessage(out)
+			_ = ctx.Engine.SessionSend(out.ToWire())
 		}
 		ctx.SM.OnEvent("logout_received")
 		return nil
@@ -62,15 +62,16 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 		for seq := bi; seq <= ei; seq++ {
 			msg, err := ctx.Store.GetMessage("FIX.4.4", target, sender, seq)
 			if err == nil && msg != nil {
-				// replay stored message bytes
-				if ctx.Engine != nil && ctx.Engine.Conn != nil {
-					_, _ = ctx.Engine.Conn.Write(msg.Body)
+				// replay stored message bytes — enqueue via SessionSend if available
+				if ctx.Engine != nil {
+					_ = ctx.Engine.SessionSend(msg.Body)
 				}
 			} else {
 				// missing: send SequenceReset as GapFill to advance
 				sr := NewSequenceResetMessage(target, sender, seq+1, true)
 				if ctx.Engine != nil {
-					_ = ctx.Engine.SendMessage(sr)
+					b, _ := sr.ToWire()
+					_ = ctx.Engine.SessionSend(b)
 				}
 			}
 		}
@@ -99,7 +100,8 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			hb.SetLenAndChecksum()
 		}
 		if ctx.Engine != nil {
-			_ = ctx.Engine.SendMessage(hb)
+			b, _ := hb.ToWire()
+			_ = ctx.Engine.SessionSend(b)
 		}
 		return nil
 	})
@@ -159,14 +161,18 @@ func NewSequenceResetMessage(sender, target string, newSeq int, gapFill bool) *f
 	return m
 }
 
-// simple send helper
+// simple send helper (backwards compatible)
 func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error {
-	if e.Conn == nil {
-		return fmt.Errorf("no connection")
-	}
 	b, err := m.ToWire()
 	if err != nil {
 		return err
+	}
+	// prefer SessionSend when session is present
+	if e.Session != nil {
+		return e.Session.Send(b)
+	}
+	if e.Conn == nil {
+		return fmt.Errorf("no connection")
 	}
 	_, err = e.Conn.Write(b)
 	return err

@@ -14,10 +14,23 @@ import (
 type FixEngine struct {
 	Initiator *network.Initiator
 	Conn      net.Conn
+	Session   *Session
 	Proc      *Processor
 	SM        *state.StateMachine
 	Store     store.Store
 	SeqMgr    *SeqManager
+}
+
+func (e *FixEngine) SessionSend(b []byte) error {
+	if e.Session == nil {
+		if e.Conn == nil {
+			return fmt.Errorf("no connection/session")
+		}
+		// fallback: direct write
+		_, err := e.Conn.Write(b)
+		return err
+	}
+	return e.Session.Send(b)
 }
 
 func NewFixEngine(init *network.Initiator) *FixEngine { return &FixEngine{Initiator: init} }
