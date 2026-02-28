@@ -2,19 +2,30 @@
 
 ## Build, Test, and Lint
 
-**Install dependencies:**
+This repository now contains both the original Python implementation and a Go rewrite under gorewrite/. Use the appropriate language tooling depending on which subsystem you work on.
+
+**Install dependencies (Python):**
 ```bash
 pip install -r requirements.txt
 pip install pytest pytest-timeout pytest-asyncio pytest-cov faker
 ```
 
-**Run all tests** (requires a QuickFIX spec file):
+**Install dependencies (Go):**
+```bash
+cd gorewrite && go mod tidy
+```
+**Run all tests (Python)** (requires a QuickFIX spec file):
 ```bash
 pytest --spec=FIX44.xml --timeout=90
 ```
 The FIX44.xml spec file is not bundled; download it from https://github.com/quickfix/quickfix/tree/master/spec or fetch it during CI:
 ```bash
 curl https://raw.githubusercontent.com/quickfix/quickfix/master/spec/FIX44.xml -o FIX44.xml
+```
+
+**Run all tests (Go)**:
+```bash
+cd gorewrite && go test ./... -v
 ```
 
 **Run a single test file or function:**
@@ -45,6 +56,8 @@ Max line length is 120; `no-member`, `star-args`, and `bad-continuation` are dis
 
 ## Architecture Overview
 
+Note: The Go rewrite lives under gorewrite/ and is being developed incrementally. Each phase produces tested Go packages that can be used side-by-side with Python components.
+
 The repo contains two distinct layers:
 
 ### 1. `pyfixmsg/` — Core FIX message library (forked from Morgan Stanley)
@@ -68,6 +81,8 @@ The session engine is async (asyncio) and structured as follows:
 | `Scheduler` | Parses JSON schedule from config (`[Scheduler] schedules`) and calls engine actions at specified times. |
 
 ## Key Conventions
+
+This repository contains both Python and Go implementations. When making changes, update both the Python code (if touched) and the corresponding Go package under gorewrite/ when relevant.
 
 ### Async-first engine
 All engine operations are async. Use `await FixEngine.create(...)` (not the constructor directly) to get a fully-initialized engine.
