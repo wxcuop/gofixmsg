@@ -2,7 +2,6 @@ package integration
 
 import (
 	"context"
-	"net"
 	"testing"
 	"time"
 
@@ -17,7 +16,7 @@ import (
 func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 	acc := network.NewAcceptor("127.0.0.1:0")
 	// handler factory
-	handler := func(conn net.Conn) {
+	handler := func(conn *network.Conn) {
 		// server-side processor and engine
 		proc := engine.NewProcessor()
 		server := &engine.FixEngine{}
@@ -25,7 +24,8 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		// send immediate Logon from acceptor to initiator (simpler for test)
 		im := engine.NewLogonMessage("SV", "CL")
 		if b, err := im.ToWire(); err == nil {
-			_, _ = conn.Write(b)
+			conn.Write(b)
+			conn.Flush() // Must flush buffered writes
 		}
 		// register reply to Logon (in case we need to respond again)
 		proc.Register("A", func(m *fixmsg.FixMessage) error {

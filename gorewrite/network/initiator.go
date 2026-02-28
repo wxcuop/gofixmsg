@@ -6,18 +6,27 @@ import (
 	"time"
 )
 
-// Initiator dials a remote address.
+// Initiator dials a remote address and establishes a connection.
 type Initiator struct {
 	Addr      string
 	Timeout   time.Duration
 	TLSConfig *tls.Config
 }
 
-func NewInitiator(addr string) *Initiator { return &Initiator{Addr: addr, Timeout: 5 * time.Second} }
+// NewInitiator creates a new Initiator with default 5-second timeout.
+func NewInitiator(addr string) *Initiator {
+	return &Initiator{Addr: addr, Timeout: 5 * time.Second}
+}
 
-func (i *Initiator) WithTLS(cfg *tls.Config) *Initiator { i.TLSConfig = cfg; return i }
+// WithTLS sets the TLS configuration for the connection.
+func (i *Initiator) WithTLS(cfg *tls.Config) *Initiator {
+	i.TLSConfig = cfg
+	return i
+}
 
-func (i *Initiator) Connect() (net.Conn, error) {
+// Connect establishes a connection to the remote address.
+// Returns a Conn wrapper with 8192-byte buffering.
+func (i *Initiator) Connect() (*Conn, error) {
 	if i.Timeout == 0 {
 		i.Timeout = 5 * time.Second
 	}
@@ -31,7 +40,7 @@ func (i *Initiator) Connect() (net.Conn, error) {
 			conn.Close()
 			return nil, err
 		}
-		return tlsConn, nil
+		return NewConn(tlsConn), nil
 	}
-	return conn, nil
+	return NewConn(conn), nil
 }
