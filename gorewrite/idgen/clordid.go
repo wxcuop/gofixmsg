@@ -26,8 +26,8 @@ func (g *NumericGenerator) Decode(s string) (int, error) { return strconv.Atoi(s
 // YMDGenerator prefixes the ID with the current date in YYYYMMDD and a zero-padded sequence.
 // Example: 20260228000042
 type YMDGenerator struct {
-	Now  func() time.Time // inject for tests; nil defaults to time.Now
-	Width int            // number of digits for the sequence (default 6)
+	Now   func() time.Time // inject for tests; nil defaults to time.Now
+	Width int              // number of digits for the sequence (default 6)
 }
 
 func NewYMDGenerator(now func() time.Time) *YMDGenerator {
