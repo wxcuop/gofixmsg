@@ -17,6 +17,7 @@ type FixEngine struct {
 	Proc      *Processor
 	SM        *state.StateMachine
 	Store     store.Store
+	SeqMgr    *SeqManager
 }
 
 func NewFixEngine(init *network.Initiator) *FixEngine { return &FixEngine{Initiator: init} }
@@ -26,6 +27,12 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	e.SM = sm
 	e.Store = st
 	e.Proc = NewProcessor()
+	// create sequence manager with a session id derived from initiator address if present
+	sid := "default"
+	if e.Initiator != nil && e.Initiator.Addr != "" {
+		sid = e.Initiator.Addr
+	}
+	e.SeqMgr = NewSeqManager(st, sid)
 	ctx := &HandlerContext{SM: sm, Store: st, Engine: e}
 	RegisterDefaultHandlers(e.Proc, ctx)
 }
