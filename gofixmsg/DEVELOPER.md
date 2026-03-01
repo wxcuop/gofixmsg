@@ -829,6 +829,46 @@ acceptor.Start(func(conn *network.Conn) {
 
 ### Data Race Prevention
 
+**Go's synchronization model:** Unlike languages with a `synchronized` keyword (Java, C#), Go requires **explicit mutex locks** for shared state protection. Go provides no automatic synchronization—you must manually call `Lock()` and `Unlock()` (or defer the unlock to ensure it runs even if panic occurs).
+
+**Comparison with Python:**
+- **Python threading:** Uses `threading.Lock()` for manual synchronization (explicit, similar to Go)
+- **Python asyncio:** Uses event loop serialization instead of mutexes—async/await ensures only one coroutine runs at a time within the event loop (implicit synchronization for single-threaded async code)
+- **Go:** Always requires explicit `sync.Mutex` locks, even with goroutines, because goroutines are true concurrency (not sequential like Python's async/await)
+
+```go
+// Go: Explicit mutex required
+var mu sync.Mutex
+var count int
+
+go func() {
+    mu.Lock()
+    defer mu.Unlock()
+    count++  // Safe
+}()
+
+// Python threading equivalent: Explicit lock required
+import threading
+mu = threading.Lock()
+count = 0
+
+def increment():
+    with mu:  # Explicit lock
+        count += 1
+
+t = threading.Thread(target=increment)
+
+// Python asyncio equivalent: Implicit (no lock needed)
+import asyncio
+count = 0
+
+async def increment():
+    global count
+    count += 1  # Safe within event loop—only one coroutine runs at a time
+
+asyncio.run(increment())  # Single-threaded, serialized execution
+```
+
 **Critical synchronization points:**
 
 1. **FixEngine.AttachSession/DetachSession (`engine/attach.go`)**
@@ -844,6 +884,26 @@ acceptor.Start(func(conn *network.Conn) {
 3. **Test integration callbacks (`integration/application_callbacks_test.go`)**
    - Application callback implementations must protect shared state with mutex
    - Test assertion functions must acquire mutex before reading callback order
+   - **Helper pattern:** Extract a helper method (e.g., `record()`) to centralize lock/append/unlock logic and eliminate boilerplate
+   
+   ```go
+   // Good: Centralized synchronization helper
+   func (t *testApp) record(name string) {
+       t.mu.Lock()
+       defer t.mu.Unlock()
+       *t.callOrder = append(*t.callOrder, name)
+   }
+   
+   func (t *testApp) OnCreate(sessionID string) {
+       t.record(fmt.Sprintf("OnCreate(%s)", sessionID))
+   }
+   
+   func (t *testApp) OnLogon(sessionID string) {
+       t.record(fmt.Sprintf("OnLogon(%s)", sessionID))
+   }
+   
+   // Reduces repetitive mutex wrapping across all callback methods
+   ```
 
 **Key initialization order principle:**
 ```go

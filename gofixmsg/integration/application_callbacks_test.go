@@ -224,67 +224,56 @@ type testApplicationImpl struct {
 	callOrder *[]string
 }
 
-func (t *testApplicationImpl) OnCreate(sessionID string) {
+// record appends a callback name to the call order list (thread-safe).
+func (t *testApplicationImpl) record(name string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnCreate(%s)", sessionID))
+	*t.callOrder = append(*t.callOrder, name)
+}
+
+func (t *testApplicationImpl) OnCreate(sessionID string) {
+	t.record(fmt.Sprintf("OnCreate(%s)", sessionID))
 }
 
 func (t *testApplicationImpl) OnLogon(sessionID string) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnLogon(%s)", sessionID))
+	t.record(fmt.Sprintf("OnLogon(%s)", sessionID))
 }
 
 func (t *testApplicationImpl) OnLogout(sessionID string) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnLogout(%s)", sessionID))
+	t.record(fmt.Sprintf("OnLogout(%s)", sessionID))
 }
 
 func (t *testApplicationImpl) ToAdmin(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("ToAdmin(MsgType=%s)", msgType))
+	t.record(fmt.Sprintf("ToAdmin(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) FromAdmin(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("FromAdmin(MsgType=%s)", msgType))
+	t.record(fmt.Sprintf("FromAdmin(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) ToApp(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("ToApp(MsgType=%s)", msgType))
+	t.record(fmt.Sprintf("ToApp(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) FromApp(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("FromApp(MsgType=%s)", msgType))
+	t.record(fmt.Sprintf("FromApp(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) OnMessage(msg *fixmsg.FixMessage, sessionID string) {
 	msgType, _ := msg.Get(35)
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnMessage(MsgType=%s)", msgType))
+	t.record(fmt.Sprintf("OnMessage(MsgType=%s)", msgType))
 }
 
 func (t *testApplicationImpl) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string) {
-	t.mu.Lock()
-	defer t.mu.Unlock()
-	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnReject(%s)", reason))
+	t.record(fmt.Sprintf("OnReject(%s)", reason))
 }
 
 // Helper to find index of element in slice
