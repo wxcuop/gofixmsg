@@ -2,6 +2,8 @@
 
 A FIX (Financial Information eXchange) protocol implementation written in Go.
 
+- https://wxcuop.github.io/gofixmsg/godoc/index.html
+
 ## Overview
 
 GoFixMsg is an implmentation of the FIX session management library, providing support for:
