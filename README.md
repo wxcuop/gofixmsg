@@ -52,4 +52,8 @@ Read the [documentation](http://pyfixmsg.readthedocs.io/), or browse the [exampl
 many examples
 
 * https://wxcuop.github.io/pyfixmsg_plus/index.html
+
+Go-First Migration Guide
+------------------------
+For users migrating from the Python implementation to the Go-based rewrite (`gorewrite`), please see the [Go-First Migration Guide](gorewrite/doc/migration.md).
  

@@ -175,13 +175,13 @@
 - [x] 27/27 engine tests passing after Phase 22-23 merge
 - [x] 9 new tests for ResendRequest & dictionary validation hardening (Phase 21-24)
 - [x] 4 new tests for multi-session support (Phase 25)
-- [ ] 3+ new tests for package reorganization (Phase 26)
+- [x] 3+ new tests for package reorganization (Phase 26)
 
 ### ✅ Overall Test Status
-- **Engine Tests:** 57/57 PASSING ✅
-- **Integration Tests:** 5/5 PASSING ✅
-- **Overall Pass Rate:** Integration suite is green; `go test ./...` still has build failures in `engine/handler` unit tests
-- **Core Logic Coverage:** Comprehensive for engine and integration paths; remaining work is handler test harness updates
+- **Engine Tests:** 60/60 PASSING ✅
+- **Integration Tests:** 6/6 PASSING ✅
+- **Overall Pass Rate:** `go test ./...` is now green across all Go packages ✅
+- **Core Logic Coverage:** Comprehensive for engine and integration paths
 
 ---
 
@@ -200,7 +200,7 @@
 4. ✅ Phase 26: Package Reorganization (1-2 hrs) - COMPLETE
 
 **Previous execution:** ~4-5 hours elapsed with parallel work vs 12-14 hours sequential
-**Current status:** 100% of codebase complete (26/26 phases done) ✅
+**Current status:** Core rewrite complete (26/26); post-core parity/sunset phases (27-31) complete ✅
 
 ---
 
@@ -222,7 +222,8 @@ Then (Post-Phase 26, parallel):
 Phase 27 ──┐
 Phase 28 ──┼─→ Master branch ready for Group 6
 Phase 29 ──┤
-Phase 30 ──┘
+Phase 30 ──┤
+Phase 31 ──┘
 ```
 
 ---
@@ -241,8 +242,6 @@ Phase 30 ──┘
   - OnMessage NOT called for admin messages
   - OnMessage NOT called if FromApp rejects
   - OnMessage receives correct sessionID
-
-**Tests:** 4/4 PASSING ✅
 
 #### ✅ Phase 28: Scheduler Parity with Python Runtime Scheduler - COMPLETE
 **Status:** ✅ COMPLETE
@@ -270,10 +269,38 @@ Phase 30 ──┘
   - Time window boundaries
   - Unknown action handling
 
-**Tests:** 7/7 PASSING ✅
+---
 
-**Group 5 Summary:**
-- ✅ Phase 27 & 28 COMPLETE
-- ✅ All 16+ tests passing (11 new tests added)
-- ✅ Ready to merge to master
-- ✅ Full API parity with Python runtime scheduler achieved
+### 🔴 PARALLEL GROUP 6: Security & Runtime Hardening ✅ COMPLETED
+
+#### Phase 29: TLS CA Chain Validation Completion ✅ COMPLETED
+- [x] Replace placeholder CA handling with real cert pool loading
+- [x] Configure `RootCAs`/`ClientCAs` appropriately
+- [x] Add negative-path TLS tests (invalid cert, missing CA, etc.)
+
+#### Phase 30: Observability & Error-Path Consistency ✅ COMPLETED
+- [x] Align production paths on structured logging (`slog`)
+- [x] Tighten explicit error propagation behavior (removed `_ =` ignores)
+- [x] Add component/session fields for critical logs
+
+---
+
+### 🟣 PARALLEL GROUP 7: Migration & Sunset Execution
+
+#### Phase 31: Go-First Docs, Examples, and Migration Guide ✅ COMPLETED
+**Worktree:** `p31-go-docs-migration`
+- [x] Add Go initiator/acceptor examples in `gorewrite/examples/`
+- [x] Document Python → Go API/config mapping in `gorewrite/doc/migration.md`
+- [x] Add production cutover and rollback checklist in `gorewrite/doc/migration.md`
+
+#### Phase 32: Python Sunset Readiness Gate
+**Worktree:** `p32-sunset-gate`
+**Depends On:** Phase 27, Phase 28, Phase 29, Phase 30, Phase 31
+**Status:** ⏳ READY TO START
+- [ ] Define and enforce final sunset gate criteria
+  - `go test ./...` green
+  - integration suite green
+  - TLS validation complete
+  - migration docs/examples published
+- [ ] Mark Python runtime as deprecated only after gate passes
+- [ ] Publish sunset recommendation with explicit risk assessment
