@@ -28,44 +28,171 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Install pkgsite
-        run: go install golang.org/x/pkgsite/cmd/pkgsite@latest
-
-      - name: Generate API Documentation with pkgsite
+      - name: Generate API Documentation
         run: |
           mkdir -p docs/api
           cd gofixmsg
           
-          # Generate documentation using pkgsite
-          # pkgsite generates complete pkg.go.dev-style documentation
-          pkgsite -o ../docs/api/index.html -list -dochtml github.com/wxcuop/gofixmsg
+          # Generate HTML documentation for all packages using go doc
+          go doc -html ./engine > ../docs/api/engine.html
+          go doc -html ./fixmsg > ../docs/api/fixmsg.html
+          go doc -html ./fixmsg/codec > ../docs/api/codec.html
+          go doc -html ./fixmsg/spec > ../docs/api/spec.html
+          go doc -html ./network > ../docs/api/network.html
+          go doc -html ./state > ../docs/api/state.html
+          go doc -html ./store > ../docs/api/store.html
+          go doc -html ./handler > ../docs/api/handler.html
+          go doc -html ./heartbeat > ../docs/api/heartbeat.html
+          go doc -html ./scheduler > ../docs/api/scheduler.html
           
-          # Also generate a landing page with package overview
-          cat > ../docs/api/README.md << 'EOF'
-          # GoFixMsg API Documentation
-          
-          Complete API documentation for GoFixMsg - a FIX protocol implementation in Go.
-          
-          ## Quick Links
-          
-          - [Full API Docs](index.html) - Complete package documentation
-          - [GitHub Repository](https://github.com/wxcuop/pyfixmsg_plus)
-          - [Developer Guide](https://github.com/wxcuop/pyfixmsg_plus/blob/main/gofixmsg/DEVELOPER.md)
-          - [Examples](https://github.com/wxcuop/pyfixmsg_plus/tree/main/gofixmsg/examples)
-          
-          ## Core Packages
-          
-          - **engine** - FIX session engine and state management
-          - **fixmsg** - FIX message parsing and serialization
-          - **fixmsg/codec** - Message codec (wire format handling)
-          - **fixmsg/spec** - QuickFIX XML specification loading
-          - **handler** - Message handler framework
-          - **network** - Network connection management (Initiator/Acceptor)
-          - **state** - Session state machine
-          - **store** - Message persistence (SQLite)
-          - **heartbeat** - Heartbeat monitoring
-          - **scheduler** - Task scheduling
-          EOF
+          # Create main index page
+          cat > ../docs/api/index.html << 'INDEXEOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>GoFixMsg API Documentation</title>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                  body {
+                      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                      line-height: 1.6;
+                      color: #333;
+                      max-width: 1000px;
+                      margin: 0 auto;
+                      padding: 20px;
+                      background: #f5f5f5;
+                  }
+                  header {
+                      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                      color: white;
+                      padding: 30px;
+                      border-radius: 8px;
+                      margin-bottom: 30px;
+                  }
+                  h1 { margin: 0 0 10px 0; }
+                  .subtitle { opacity: 0.9; margin: 0; }
+                  section {
+                      background: white;
+                      padding: 20px;
+                      margin-bottom: 20px;
+                      border-radius: 8px;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                  }
+                  h2 { color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+                  .package-grid {
+                      display: grid;
+                      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                      gap: 15px;
+                      margin-top: 15px;
+                  }
+                  .package-card {
+                      border: 1px solid #ddd;
+                      padding: 15px;
+                      border-radius: 6px;
+                      transition: box-shadow 0.3s;
+                  }
+                  .package-card:hover {
+                      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                      border-color: #667eea;
+                  }
+                  .package-card h3 { margin: 0 0 8px 0; color: #667eea; }
+                  .package-card p { margin: 0; font-size: 0.95em; color: #666; }
+                  .package-card a {
+                      display: inline-block;
+                      margin-top: 10px;
+                      color: #667eea;
+                      text-decoration: none;
+                      border-bottom: 1px solid #667eea;
+                  }
+                  .package-card a:hover { color: #764ba2; }
+                  footer {
+                      text-align: center;
+                      color: #999;
+                      margin-top: 40px;
+                      padding-top: 20px;
+                      border-top: 1px solid #ddd;
+                      font-size: 0.9em;
+                  }
+              </style>
+          </head>
+          <body>
+              <header>
+                  <h1>GoFixMsg</h1>
+                  <p class="subtitle">FIX Protocol Implementation in Go - Complete API Documentation</p>
+              </header>
+              
+              <section>
+                  <h2>📦 Core Packages</h2>
+                  <div class="package-grid">
+                      <div class="package-card">
+                          <h3>engine</h3>
+                          <p>FIX session engine and state management</p>
+                          <a href="engine.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>fixmsg</h3>
+                          <p>FIX message parsing and serialization</p>
+                          <a href="fixmsg.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>fixmsg/codec</h3>
+                          <p>Message codec (wire format handling)</p>
+                          <a href="codec.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>fixmsg/spec</h3>
+                          <p>QuickFIX XML specification loading</p>
+                          <a href="spec.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>network</h3>
+                          <p>Network connection management (Initiator/Acceptor)</p>
+                          <a href="network.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>state</h3>
+                          <p>Session state machine</p>
+                          <a href="state.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>store</h3>
+                          <p>Message persistence (SQLite)</p>
+                          <a href="store.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>handler</h3>
+                          <p>Message handler framework</p>
+                          <a href="handler.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>heartbeat</h3>
+                          <p>Heartbeat and test request monitoring</p>
+                          <a href="heartbeat.html">View Docs →</a>
+                      </div>
+                      <div class="package-card">
+                          <h3>scheduler</h3>
+                          <p>Scheduled tasks for session actions</p>
+                          <a href="scheduler.html">View Docs →</a>
+                      </div>
+                  </div>
+              </section>
+              
+              <section>
+                  <h2>🔗 Quick Links</h2>
+                  <ul>
+                      <li><a href="https://github.com/wxcuop/pyfixmsg_plus">GitHub Repository</a></li>
+                      <li><a href="https://github.com/wxcuop/pyfixmsg_plus/blob/main/gofixmsg/DEVELOPER.md">Developer Guide</a></li>
+                      <li><a href="https://github.com/wxcuop/pyfixmsg_plus/tree/main/gofixmsg/examples">Examples</a></li>
+                  </ul>
+              </section>
+              
+              <footer>
+                  <p>GoFixMsg API Documentation - Generated on page load</p>
+              </footer>
+          </body>
+          </html>
+          INDEXEOF
 
       - name: Upload documentation artifact
         uses: actions/upload-artifact@v4
