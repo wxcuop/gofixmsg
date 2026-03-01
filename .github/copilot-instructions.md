@@ -1,117 +1,157 @@
-# Copilot Instructions for pyfixmsg_plus
+# Copilot Instructions for GoFixMsg
 
 ## Build, Test, and Lint
 
-This repository now contains both the original Python implementation and a Go rewrite under gorewrite/. Use the appropriate language tooling depending on which subsystem you work on.
+GoFixMsg is a production-grade Go implementation of the FIX (Financial Information Exchange) protocol with session management, persistence, and comprehensive testing.
 
-**Install dependencies (Python):**
+**Install dependencies:**
 ```bash
-pip install -r requirements.txt
-pip install pytest pytest-timeout pytest-asyncio pytest-cov faker
-```
-
-**Install dependencies (Go):**
-```bash
-cd gorewrite && go mod tidy
-```
-**Run all tests (Python)** (requires a QuickFIX spec file):
-```bash
-pytest --spec=FIX44.xml --timeout=90
-```
-The FIX44.xml spec file is not bundled; download it from https://github.com/quickfix/quickfix/tree/master/spec or fetch it during CI:
-```bash
-curl https://raw.githubusercontent.com/quickfix/quickfix/master/spec/FIX44.xml -o FIX44.xml
+cd gofixmsg && go mod tidy
 ```
 
-**Run all tests (Go)**:
+**Build:**
 ```bash
-cd gorewrite && go test ./... -v
+cd gofixmsg && go build ./...
 ```
 
-**Run a single test file or function:**
+**Run all tests:**
 ```bash
-pytest tests/unit/test_state_machine_core.py -v
-pytest tests/unit/test_engine_core.py::TestEngineCore::test_some_function -v
+cd gofixmsg && go test ./... -v
 ```
 
-**Run slow or chaos tests** (skipped by default):
+**Run tests with race detection** (recommended for concurrency validation):
 ```bash
-pytest --run-slow --run-chaos
+cd gofixmsg && go test -race ./... -v -timeout 10m
 ```
 
-**Run tests by marker:**
+**Run tests with coverage:**
 ```bash
-pytest -m unit
-pytest -m integration
-pytest -m "not slow"
+cd gofixmsg && go test ./... -v -race -coverprofile=coverage.out -covermode=atomic
 ```
 
-**Lint:**
+**Run specific package tests:**
 ```bash
-pylint pyfixmsg_plus/
+cd gofixmsg && go test ./engine -v
+cd gofixmsg && go test ./integration -v
+cd gofixmsg && go test -run TestApplicationCallbacks ./integration -v
 ```
-Max line length is 120; `no-member`, `star-args`, and `bad-continuation` are disabled in `.pylintrc`.
 
-**Coverage is enforced at 95%** via `pytest.ini`. Reports are written to `htmlcov/` and `coverage.xml`.
+**Lint and format:**
+```bash
+cd gofixmsg && go fmt ./...
+cd gofixmsg && go vet ./...
+```
 
 ## Architecture Overview
 
-Note: The Go rewrite lives under gorewrite/ and is being developed incrementally. Each phase produces tested Go packages that can be used side-by-side with Python components.
+GoFixMsg consists of two main usage modes:
 
-The repo contains two distinct layers:
+### 1. Parser-Only Mode
+Use GoFixMsg as a lightweight FIX message parser without session management.
 
-### 1. `pyfixmsg/` — Core FIX message library (forked from Morgan Stanley)
-- `FixMessage` (inherits `dict`) is the central class for parsing, manipulating, and serialising FIX messages.
-- `Codec` (`pyfixmsg/codecs/stringfix.py`) handles wire-format parsing and serialisation.
-- `FixSpec` (`pyfixmsg/reference.py`) loads QuickFIX XML spec files; required only for repeating group support.
+**Components:**
+- `fixmsg/` — In-memory FIX message representation with field access
+- `fixmsg/codec/` — Wire-format parsing and serialization
+- `fixmsg/spec/` — QuickFIX XML specification loading for repeating group support
+- `cmd/parse/` — CLI tool for parsing FIX messages
 
-### 2. `pyfixmsg_plus/` — FIX session management layer built on top of `pyfixmsg`
-The session engine is async (asyncio) and structured as follows:
+**Example:**
+```go
+import "github.com/wxcuop/gofixmsg/fixmsg"
 
-| Component | Role |
-|---|---|
-| `FixEngine` (`fixengine/engine.py`) | Central coordinator. Created with `await FixEngine.create(config, app)`. Supports `initiator` and `acceptor` modes. |
-| `Application` (`application.py`) | Abstract base class users must subclass. Callbacks: `onCreate`, `onLogon`, `onLogout`, `toAdmin`, `fromAdmin`, `toApp`, `fromApp`, `onMessage`. |
-| `ConfigManager` (`fixengine/configmanager.py`) | Singleton. Reads `config.ini`. Sensitive values stored as `ENC:<base64>` using `SimpleCrypt`. |
-| `StateMachine` (`fixengine/state_machine.py`) | State: `Disconnected → Connecting → AwaitingLogon → LoggedOn → ...`. Subscribers receive state-name strings on transitions. |
-| `MessageProcessor` / `MessageHandler` (`fixengine/message_handler.py`) | Per-MsgType handlers registered by FIX type code (e.g. `'A'`=Logon, `'D'`=NewOrder). All handlers are async and decorated with `logging_decorator`. |
-| `NetworkConnection` (`fixengine/network.py`) | `Acceptor` and `Initiator` subclasses wrapping asyncio streams with optional TLS. |
-| `MessageStoreFactory` (`fixengine/message_store_factory.py`) | Creates either `DatabaseMessageStore` (sync sqlite3) or `DatabaseMessageStoreAioSqlite` (async aiosqlite) based on `message_store_type` config key. |
-| `Heartbeat` / `HeartbeatBuilder` | Built via fluent builder. Manages heartbeat tasks and test request tracking. |
-| `Scheduler` | Parses JSON schedule from config (`[Scheduler] schedules`) and calls engine actions at specified times. |
+msg := fixmsg.NewFixMessage()
+msg.Set(35, "D")  // MsgType = NewOrderSingle
+msg.Set(55, "AAPL") // Symbol
+wire, _ := msg.ToWire()
+```
+
+### 2. Full Session Engine Mode
+Use GoFixMsg for production FIX sessions with heartbeat, sequence management, persistence, and state machine.
+
+**Core Components:**
+
+| Package | Component | Role |
+|---------|-----------|------|
+| `engine/` | `FixEngine` | Central session coordinator. Manages initiator/acceptor modes, message routing, and lifecycle |
+| `engine/session/` | `Session` | Per-connection read/write loops with sequential message processing |
+| `engine/handler/` | `MessageProcessor`, `MessageHandler` | Registered handlers by FIX MsgType (e.g., 'A'=Logon, 'D'=NewOrder) |
+| `state/` | `StateMachine` | Session state transitions: Disconnected → Connecting → AwaitingLogon → Active → ... |
+| `heartbeat/` | `Heartbeat` | Periodic heartbeat ticker with test request tracking |
+| `network/` | `Initiator`, `Acceptor` | TCP/TLS socket management |
+| `store/` | `SQLiteStore` | Thread-safe SQLite persistence of sent/received messages |
+| `scheduler/` | `RuntimeScheduler` | Time-based action scheduling (e.g., dailyLogon at 08:00) |
+
+**Example:**
+```go
+import "github.com/wxcuop/gofixmsg/engine"
+
+engine := engine.NewFixEngine(initiator)
+engine.SetApplication(myApp)  // Implement callbacks
+engine.SetupComponents(stateMachine, store)
+engine.Connect()  // Blocks until connected
+defer engine.Close()
+```
 
 ## Key Conventions
 
-This repository contains both Python and Go implementations. When making changes, update both the Python code (if touched) and the corresponding Go package under gorewrite/ when relevant.
+### Concurrency Model
+GoFixMsg uses goroutines for true concurrent execution:
+- **Session.readLoop()**: Goroutine that reads from socket and processes incoming messages sequentially
+- **Session.writeLoop()**: Goroutine that drains the send queue to the socket
+- **Heartbeat goroutines**: Ticker for periodic heartbeat/test request
 
-### Async-first engine
-All engine operations are async. Use `await FixEngine.create(...)` (not the constructor directly) to get a fully-initialized engine.
+All shared state is protected by `sync.Mutex`. See [DEVELOPER.md](gofixmsg/DEVELOPER.md#data-race-prevention) for synchronization patterns.
 
-### Message handler registration
-Handlers are registered by FIX MsgType string in `engine.py`:
-```python
-handler_classes = {'A': LogonHandler, 'D': NewOrderHandler, ...}
+### Application Interface
+Implement `engine.Application` to receive FIX callbacks:
+```go
+type MyApplication struct{}
+
+func (a *MyApplication) OnCreate(sessionID string) { }
+func (a *MyApplication) OnLogon(sessionID string) { }
+func (a *MyApplication) OnLogout(sessionID string) { }
+func (a *MyApplication) ToAdmin(msg *fixmsg.FixMessage, sessionID string) error { return nil }
+func (a *MyApplication) FromAdmin(msg *fixmsg.FixMessage, sessionID string) error { return nil }
+func (a *MyApplication) ToApp(msg *fixmsg.FixMessage, sessionID string) error { return nil }
+func (a *MyApplication) FromApp(msg *fixmsg.FixMessage, sessionID string) error { return nil }
+func (a *MyApplication) OnMessage(msg *fixmsg.FixMessage, sessionID string) { }
+func (a *MyApplication) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string) { }
 ```
-To add a new message type, create a subclass of `MessageHandler`, implement `async def handle(self, message)`, and register it in this dict.
 
-### `logging_decorator`
-All `MessageHandler.handle()` methods should be decorated with `@logging_decorator` for consistent debug logging of incoming message type and sequence number.
+### Message Handler Registration
+Register handlers by FIX MsgType code:
+```go
+processor := handler.NewProcessor()
+processor.Register("D", func(msg *fixmsg.FixMessage) error {
+    // Handle NewOrderSingle
+    return nil
+})
+```
 
-### ConfigManager is a Singleton
-`ConfigManager` uses `__new__` to enforce a single instance per process. In tests, reset state carefully or use a `temp_config_file` fixture (provided in `tests/fixtures/test_fixtures.py`).
+### FIX Tag Access
+All tags are integers (see `fixmsg/tags.go` for constants):
+```go
+msgType, _ := msg.Get(35)           // MsgType (2-valued return)
+clOrdID := msg.MustGet(11)          // ClOrdID (panics if missing)
+msg.Set(55, "AAPL")                 // Set Symbol
+```
 
-### Encrypted config values
-Config values prefixed with `ENC:` are decrypted automatically when `get(..., decrypt_value=True)` is called. Use `configmanager.encrypt(value)` / `configmanager.decrypt(value)` module-level helpers.
+### Session ID Format
+Session IDs are formatted as `"{SENDER}-{TARGET}-{HOST}:{PORT}"`:
+```go
+sessionID := fmt.Sprintf("%s-%s-%s:%d", senderID, targetID, host, port)
+```
 
-### Message store dual backends
-`DatabaseMessageStore` uses `sqlite3` synchronously with an `asyncio.Lock`. `DatabaseMessageStoreAioSqlite` uses `aiosqlite` fully async. Both must be `await store.initialize()`-d before use.
+### Data Race Prevention
+Go requires explicit mutex synchronization (no `synchronized` keyword like Java):
+```go
+// Always protect shared state
+t.mu.Lock()
+defer t.mu.Unlock()
+*t.callOrder = append(*t.callOrder, ...)
+```
 
-### Test markers
-- `@pytest.mark.slow` and `@pytest.mark.chaos` tests are skipped unless `--run-slow` / `--run-chaos` flags are passed.
-- `@pytest.mark.asyncio` (or `asyncio_mode=auto` in `pytest.ini`) applies to all async test functions automatically.
-
-### FIX tag access
-`FixMessage` keys are integers (tag numbers). Access values by integer tag: `msg.get(35)` for MsgType, `msg.get(49)` for SenderCompID, etc.
-
-### Session ID format
-Session IDs are formatted as `"{SENDER}-{TARGET}-{HOST}:{PORT}"` (see `engine.py`).
+See [DEVELOPER.md](gofixmsg/DEVELOPER.md#data-race-prevention) for:
+- Critical synchronization points (FixEngine.attachMu, Heartbeat.mu, Session.mu)
+- Initialization order principles
+- How to use `go test -race ./...` for validation
