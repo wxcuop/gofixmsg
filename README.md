@@ -1,10 +1,10 @@
 # GoFixMsg
 
-A high-performance FIX (Financial Information eXchange) protocol implementation written in Go.
+A FIX (Financial Information eXchange) protocol implementation written in Go.
 
 ## Overview
 
-GoFixMsg is a complete rewrite of the FIX session management library, providing robust FIX protocol support with:
+GoFixMsg is an implmentation of the FIX session management library, providing support for:
 
 - **async-first architecture** using goroutines for concurrent session handling
 - **state machine-based session management** (Disconnected → Connecting → AwaitingLogon → LoggedOn)
@@ -64,14 +64,9 @@ See `examples/` for complete initiator and acceptor applications demonstrating:
 - Sending and receiving messages
 - Handling session callbacks
 
-## Legacy Python Code
-
-The original Python implementation is archived in `zz_archive/`. It remains fully functional but is no longer actively maintained. The Go rewrite is the recommended implementation for new projects.
-
 ## Documentation
 
 - [Architecture & Design](gofixmsg/doc/plan.md) - High-level system design
-- [Phase 31/32 Plan](gofixmsg/doc/PHASE_31_32_PLAN.md) - Development roadmap
 - [FIX Protocol Spec Integration](gofixmsg/doc/spec/) - QuickFIX XML spec handling
 
 ## License
