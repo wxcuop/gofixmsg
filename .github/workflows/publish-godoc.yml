@@ -1,0 +1,78 @@
+name: Publish GoDoc
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'gofixmsg/**'
+      - '.github/workflows/publish-godoc.yml'
+  workflow_dispatch:
+
+jobs:
+  publish-docs:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Generate API Documentation
+        run: |
+          cd gofixmsg
+          
+          # Create docs directory
+          mkdir -p ../docs/api
+          
+          # Use go doc to generate markdown-like documentation
+          # This is a simple approach; for more complex docs, consider godoc or pkgsite
+          go doc -html ./... > ../docs/api/index.html 2>/dev/null || echo "Generating fallback docs..."
+          
+          # Alternative: Generate a simple index for key packages
+          cat > ../docs/api/packages.md << 'EOF'
+          # GoFixMsg API Documentation
+          
+          Generated from GoDoc. For live documentation, visit:
+          - [pkg.go.dev/github.com/wxcuop/gofixmsg](https://pkg.go.dev/github.com/wxcuop/gofixmsg)
+          
+          ## Key Packages
+          
+          - **engine** - FIX session engine and state management
+          - **fixmsg** - FIX message parsing and serialization
+          - **fixmsg/codec** - Message codec (wire format handling)
+          - **fixmsg/spec** - QuickFIX XML specification loading
+          - **handler** - Message handler framework
+          - **network** - Network connection management (Initiator/Acceptor)
+          - **state** - Session state machine
+          - **store** - Message persistence (SQLite)
+          - **heartbeat** - Heartbeat monitoring
+          - **scheduler** - Task scheduling
+          
+          See gofixmsg/DEVELOPER.md for detailed developer guide.
+          EOF
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: godoc
+          path: docs/api/
+          retention-days: 30
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/api
+          destination_dir: godoc
+          enable_jekyll: false
