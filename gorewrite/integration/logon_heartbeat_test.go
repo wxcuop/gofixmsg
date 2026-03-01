@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
+	"github.com/wxcuop/pyfixmsg_plus/engine/session"
 	"testing"
 	"time"
 
@@ -15,13 +17,13 @@ import (
 func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 	acc := network.NewAcceptor("127.0.0.1:0")
 	// handler factory
-	handler := func(conn *network.Conn) {
+	acceptorHandler := func(conn *network.Conn) {
 		// server-side processor and engine
-		proc := engine.NewProcessor()
+		proc := handler.NewProcessor()
 		server := &engine.FixEngine{}
 		server.Proc = proc
 		// send immediate Logon from acceptor to initiator (simpler for test)
-		im := engine.NewLogonMessage("SV", "CL")
+		im := handler.NewLogonMessage("SV", "CL")
 		im.Set(34, "1")
 		im.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 		im.SetLenAndChecksum()
@@ -33,7 +35,7 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		proc.Register("A", func(m *fixmsg.FixMessage) error {
 			sender, _ := m.Get(56)
 			target, _ := m.Get(49)
-			out := engine.NewLogonMessage(sender, target)
+			out := handler.NewLogonMessage(sender, target)
 			out.Set(34, "2")
 			out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 			out.SetLenAndChecksum()
@@ -42,7 +44,7 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		})
 		// create session
 		done := make(chan struct{})
-		sess := engine.NewSession(conn, proc)
+		sess := session.NewSession(conn, proc)
 		sess.SetOnClose(func() {
 			close(done)
 		})
@@ -60,7 +62,7 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 				case <-sess.Context().Done():
 					return
 				case <-ticker.C:
-					hb := engine.NewHeartbeatMessage("SV", "CL")
+					hb := handler.NewHeartbeatMessage("SV", "CL")
 					err := server.SendMessage(hb)
 					if err != nil {
 						// could be session closing
@@ -73,7 +75,7 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	err := acc.Start(handler)
+	err := acc.Start(acceptorHandler)
 	require.NoError(t, err)
 	defer acc.Stop()
 
@@ -106,7 +108,7 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 	defer engineClient.Close()
 
 	// send Logon from initiator
-	out := engine.NewLogonMessage("CL","SV")
+	out := handler.NewLogonMessage("CL","SV")
 	out.Set(34, "1")
 	out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 	out.SetLenAndChecksum()

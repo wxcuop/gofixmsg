@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
+	"github.com/wxcuop/pyfixmsg_plus/engine/session"
 	"fmt"
 	"testing"
 	"time"
@@ -26,13 +28,13 @@ func TestApplicationCallbacks(t *testing.T) {
 
 	// Server-side acceptor handler
 	acc := network.NewAcceptor("127.0.0.1:0")
-	handler := func(conn *network.Conn) {
-		proc := engine.NewProcessor()
+	acceptorHandler := func(conn *network.Conn) {
+		proc := handler.NewProcessor()
 		server := &engine.FixEngine{}
 		server.Proc = proc
 
 		// Send Logon from acceptor to initiator
-		im := engine.NewLogonMessage("SV", "CL")
+		im := handler.NewLogonMessage("SV", "CL")
 		im.Set(34, "1")
 		im.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 		im.SetLenAndChecksum()
@@ -45,7 +47,7 @@ func TestApplicationCallbacks(t *testing.T) {
 		proc.Register("A", func(m *fixmsg.FixMessage) error {
 			sender, _ := m.Get(56)
 			target, _ := m.Get(49)
-			out := engine.NewLogonMessage(sender, target)
+			out := handler.NewLogonMessage(sender, target)
 			out.Set(34, "2")
 			out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 			out.SetLenAndChecksum()
@@ -73,7 +75,7 @@ func TestApplicationCallbacks(t *testing.T) {
 
 		// Create session and setup server engine
 		done := make(chan struct{})
-		sess := engine.NewSession(conn, proc)
+		sess := session.NewSession(conn, proc)
 		sess.SetOnClose(func() {
 			close(done)
 		})
@@ -86,7 +88,7 @@ func TestApplicationCallbacks(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	err := acc.Start(handler)
+	err := acc.Start(acceptorHandler)
 	require.NoError(t, err)
 	defer acc.Stop()
 
@@ -122,7 +124,7 @@ func TestApplicationCallbacks(t *testing.T) {
 	require.True(t, hasCallback(*testApp.callOrder, "OnCreate"), "OnCreate should be called")
 
 	// Send Logon (call ToAdmin before SendMessage)
-	logon := engine.NewLogonMessage("CL", "SV")
+	logon := handler.NewLogonMessage("CL", "SV")
 	logon.Set(34, "1")
 	logon.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 	logon.SetLenAndChecksum()
@@ -164,7 +166,7 @@ func TestApplicationCallbacks(t *testing.T) {
 	t.Logf("Final callOrder: %v", *testApp.callOrder)
 
 	// Send Logout (call ToAdmin before SendMessage)
-	logout := engine.NewLogoutMessage("CL", "SV")
+	logout := handler.NewLogoutMessage("CL", "SV")
 	logout.Set(34, "3")
 	logout.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 	logout.SetLenAndChecksum()

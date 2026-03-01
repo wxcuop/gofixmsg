@@ -1,6 +1,8 @@
 package integration
 
 import (
+	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
+	"github.com/wxcuop/pyfixmsg_plus/engine/session"
 	"testing"
 	"time"
 
@@ -16,9 +18,9 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 	acc := network.NewAcceptor("127.0.0.1:0")
 	testReqCh := make(chan *fixmsg.FixMessage, 1)
 
-	handler := func(conn *network.Conn) {
+	acceptorHandler := func(conn *network.Conn) {
 		// send immediate Logon from acceptor to initiator
-		im := engine.NewLogonMessage("SV", "CL")
+		im := handler.NewLogonMessage("SV", "CL")
 		im.Set(34, "1")
 		im.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 		im.SetLenAndChecksum()
@@ -28,7 +30,7 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 		}
 
 		// server-side: just listen and capture TestRequest
-		proc := engine.NewProcessor()
+		proc := handler.NewProcessor()
 		server := &engine.FixEngine{}
 		server.Proc = proc
 		proc.Register("1", func(m *fixmsg.FixMessage) error {
@@ -39,7 +41,7 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 			return nil
 		})
 		proc.Register("A", func(m *fixmsg.FixMessage) error {
-			out := engine.NewLogonMessage("SV", "CL")
+			out := handler.NewLogonMessage("SV", "CL")
 			out.Set(34, "2")
 			out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 			out.SetLenAndChecksum()
@@ -48,7 +50,7 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 		})
 
 		done := make(chan struct{})
-		sess := engine.NewSession(conn, proc)
+		sess := session.NewSession(conn, proc)
 		sess.SetOnClose(func() {
 			close(done)
 		})
@@ -60,7 +62,7 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	err := acc.Start(handler)
+	err := acc.Start(acceptorHandler)
 	require.NoError(t, err)
 	defer acc.Stop()
 
@@ -78,7 +80,7 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 	// connect and send a Logon from initiator
 	require.NoError(t, initiator.Connect())
 	defer initiator.Close()
-	out := engine.NewLogonMessage("CL", "SV")
+	out := handler.NewLogonMessage("CL", "SV")
 	out.Set(34, "1")
 	out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
 	out.SetLenAndChecksum()
