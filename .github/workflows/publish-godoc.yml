@@ -28,25 +28,32 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: Generate API Documentation
+      - name: Install pkgsite
+        run: go install golang.org/x/pkgsite/cmd/pkgsite@latest
+
+      - name: Generate API Documentation with pkgsite
         run: |
+          mkdir -p docs/api
           cd gofixmsg
           
-          # Create docs directory
-          mkdir -p ../docs/api
+          # Generate documentation using pkgsite
+          # pkgsite generates complete pkg.go.dev-style documentation
+          pkgsite -o ../docs/api/index.html -list -dochtml github.com/wxcuop/gofixmsg
           
-          # Use go doc to generate markdown-like documentation
-          # This is a simple approach; for more complex docs, consider godoc or pkgsite
-          go doc -html ./... > ../docs/api/index.html 2>/dev/null || echo "Generating fallback docs..."
-          
-          # Alternative: Generate a simple index for key packages
-          cat > ../docs/api/packages.md << 'EOF'
+          # Also generate a landing page with package overview
+          cat > ../docs/api/README.md << 'EOF'
           # GoFixMsg API Documentation
           
-          Generated from GoDoc. For live documentation, visit:
-          - [pkg.go.dev/github.com/wxcuop/gofixmsg](https://pkg.go.dev/github.com/wxcuop/gofixmsg)
+          Complete API documentation for GoFixMsg - a FIX protocol implementation in Go.
           
-          ## Key Packages
+          ## Quick Links
+          
+          - [Full API Docs](index.html) - Complete package documentation
+          - [GitHub Repository](https://github.com/wxcuop/pyfixmsg_plus)
+          - [Developer Guide](https://github.com/wxcuop/pyfixmsg_plus/blob/main/gofixmsg/DEVELOPER.md)
+          - [Examples](https://github.com/wxcuop/pyfixmsg_plus/tree/main/gofixmsg/examples)
+          
+          ## Core Packages
           
           - **engine** - FIX session engine and state management
           - **fixmsg** - FIX message parsing and serialization
@@ -58,8 +65,6 @@ jobs:
           - **store** - Message persistence (SQLite)
           - **heartbeat** - Heartbeat monitoring
           - **scheduler** - Task scheduling
-          
-          See gofixmsg/DEVELOPER.md for detailed developer guide.
           EOF
 
       - name: Upload documentation artifact
