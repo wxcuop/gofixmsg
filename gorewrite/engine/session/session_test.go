@@ -2,6 +2,8 @@ package session
 
 import (
 	"net"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 

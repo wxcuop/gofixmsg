@@ -33,21 +33,6 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 		proc := handler.NewProcessor()
 		server := &engine.FixEngine{}
 		server.Proc = proc
-		proc.Register("1", func(m *fixmsg.FixMessage) error {
-			select {
-			case testReqCh <- m:
-			default:
-			}
-			return nil
-		})
-		proc.Register("A", func(m *fixmsg.FixMessage) error {
-			out := handler.NewLogonMessage("SV", "CL")
-			out.Set(34, "2")
-			out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
-			out.SetLenAndChecksum()
-			_ = server.SendMessage(out)
-			return nil
-		})
 
 		done := make(chan struct{})
 		sess := session.NewSession(conn, proc)
@@ -57,6 +42,14 @@ func TestInitiatorAcceptor_TestRequestEscalation(t *testing.T) {
 		stServer := store.NewSQLiteStore()
 		_ = stServer.Init(":memory:")
 		server.SetupComponents(state.NewStateMachine(), stServer)
+		// Register custom handlers AFTER SetupComponents to override defaults
+		proc.Register("1", func(m *fixmsg.FixMessage) error {
+			select {
+			case testReqCh <- m:
+			default:
+			}
+			return nil
+		})
 		_ = server.AttachSession(sess)
 		<-done
 		time.Sleep(100 * time.Millisecond)

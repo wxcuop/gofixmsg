@@ -216,7 +216,13 @@ func (s *Session) writeLoop() {
 }
 
 // Send enqueues a raw FIX frame (already with checksum) to the send queue.
-func (s *Session) Send(b []byte) error {
+func (s *Session) Send(b []byte) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			// sendCh was closed concurrently (session is shutting down)
+			err = io.ErrClosedPipe
+		}
+	}()
 	select {
 	case <-s.ctx.Done():
 		return io.ErrClosedPipe

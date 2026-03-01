@@ -27,8 +27,13 @@ func (e *FixEngine) AttachSession(s *session.Session) error {
 			e.Monitor.Seen()
 		}
 	})
+	// Chain with any existing OnClose callback (e.g. set by tests before AttachSession)
+	existingOnClose := s.OnClose
 	// on session close, detach and optionally start reconnect loop in a goroutine
 	s.SetOnClose(func() {
+		if existingOnClose != nil {
+			existingOnClose()
+		}
 		go func() {
 			// ensure we stop monitor/hb sender and clear session
 			e.DetachSession()
