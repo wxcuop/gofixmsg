@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GoFixMsg - API Documentation</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        h1 { margin: 0 0 10px 0; }
+        .subtitle { opacity: 0.9; margin: 0; }
+        .nav {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        .nav a {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background 0.3s;
+        }
+        .nav a:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            margin-top: 0;
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .package-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+        .package-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 6px;
+            transition: box-shadow 0.3s, border-color 0.3s;
+        }
+        .package-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
+        .package-card h3 {
+            margin: 0 0 8px 0;
+            color: #667eea;
+        }
+        .package-card p {
+            margin: 0;
+            font-size: 0.95em;
+            color: #666;
+        }
+        .package-card a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #667eea;
+            text-decoration: none;
+            border-bottom: 1px solid #667eea;
+        }
+        .package-card a:hover {
+            color: #764ba2;
+            border-color: #764ba2;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Courier New", monospace;
+        }
+        .external-links {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .external-links a {
+            color: #667eea;
+            text-decoration: none;
+            border-bottom: 1px solid #667eea;
+        }
+        .external-links a:hover {
+            color: #764ba2;
+        }
+        footer {
+            text-align: center;
+            color: #999;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>GoFixMsg</h1>
+        <p class="subtitle">FIX (Financial Information eXchange) Protocol Implementation in Go</p>
+        <div class="nav">
+            <a href="https://github.com/wxcuop/pyfixmsg_plus">GitHub Repository</a>
+            <a href="https://pkg.go.dev/github.com/wxcuop/gofixmsg">pkg.go.dev</a>
+            <a href="index.html">Main Docs</a>
+        </div>
+    </header>
+
+    <div class="section">
+        <h2>📚 Overview</h2>
+        <p>
+            GoFixMsg is a comprehensive FIX session management library for Go, providing:
+        </p>
+        <ul>
+            <li><strong>Message Parsing & Creation:</strong> Parse FIX messages from wire format, manipulate fields, serialize back</li>
+            <li><strong>Session Management:</strong> Full FIX session lifecycle with state machine</li>
+            <li><strong>Persistence:</strong> SQLite-based message store for gap filling and recovery</li>
+            <li><strong>Multi-Session:</strong> Concurrent session handling with initiator and acceptor modes</li>
+            <li><strong>Spec Support:</strong> Load QuickFIX XML specifications for repeating group support</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>📦 Core Packages</h2>
+        <div class="package-grid">
+            <div class="package-card">
+                <h3>engine</h3>
+                <p>FIX session engine and state management. Core coordinator for session lifecycle.</p>
+            </div>
+            <div class="package-card">
+                <h3>fixmsg</h3>
+                <p>FIX message parsing, creation, and field access. In-memory message representation.</p>
+            </div>
+            <div class="package-card">
+                <h3>fixmsg/codec</h3>
+                <p>Wire format encoding/decoding. Converts between bytes and FixMessage objects.</p>
+            </div>
+            <div class="package-card">
+                <h3>fixmsg/spec</h3>
+                <p>QuickFIX XML specification loading for repeating group and message type support.</p>
+            </div>
+            <div class="package-card">
+                <h3>network</h3>
+                <p>TCP/TLS connection management. Initiator and Acceptor modes for FIX connections.</p>
+            </div>
+            <div class="package-card">
+                <h3>state</h3>
+                <p>Session state machine. Manages FIX session lifecycle transitions.</p>
+            </div>
+            <div class="package-card">
+                <h3>store</h3>
+                <p>Message persistence layer using SQLite. Enables gap filling and recovery.</p>
+            </div>
+            <div class="package-card">
+                <h3>handler</h3>
+                <p>Message handler framework for custom FIX processing.</p>
+            </div>
+            <div class="package-card">
+                <h3>heartbeat</h3>
+                <p>Heartbeat and test request monitoring and management.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🚀 Quick Links</h2>
+        <ul>
+            <li><a href="https://pkg.go.dev/github.com/wxcuop/gofixmsg">Full API on pkg.go.dev</a> - Interactive Go package documentation</li>
+            <li><a href="index.html">Project Documentation</a> - Full project documentation including Python pyfixmsg</li>
+            <li><a href="https://github.com/wxcuop/pyfixmsg_plus/tree/main/gofixmsg/examples">Examples</a> - Complete working examples (parser, session, initiator/acceptor)</li>
+            <li><a href="https://github.com/wxcuop/pyfixmsg_plus/blob/main/gofixmsg/DEVELOPER.md">Developer Guide</a> - Comprehensive development guide with patterns and best practices</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>📖 Documentation</h2>
+        <p><strong>For developers:</strong></p>
+        <ul>
+            <li>Check the <a href="https://github.com/wxcuop/pyfixmsg_plus/blob/main/gofixmsg/DEVELOPER.md">DEVELOPER.md</a> guide for comprehensive usage patterns</li>
+            <li>Browse <a href="https://github.com/wxcuop/pyfixmsg_plus/tree/main/gofixmsg/examples">examples/</a> directory for working code samples</li>
+            <li>Run tests: <code>cd gofixmsg && go test ./... -v</code></li>
+            <li>Live API docs at <a href="https://pkg.go.dev/github.com/wxcuop/gofixmsg">pkg.go.dev</a></li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>💡 Use Cases</h2>
+        <ul>
+            <li><strong>Message Parsing CLI:</strong> Standalone FIX message parsing without session overhead</li>
+            <li><strong>FIX Gateway:</strong> Build gateways connecting multiple FIX counterparties</li>
+            <li><strong>Trading System:</strong> Full session management for production trading</li>
+            <li><strong>Message Validator:</strong> Validate FIX messages against QuickFIX specs</li>
+            <li><strong>Bridge/Adapter:</strong> Translate between different FIX versions and variations</li>
+        </ul>
+    </div>
+
+    <footer>
+        <p>GoFixMsg is part of the <a href="https://github.com/wxcuop/pyfixmsg_plus">pyfixmsg_plus</a> project</p>
+        <p>Documentation generated by GitHub Actions • Last updated: <span id="date"></span></p>
+        <script>
+            document.getElementById('date').textContent = new Date().toLocaleDateString();
+        </script>
+    </footer>
+</body>
+</html>
