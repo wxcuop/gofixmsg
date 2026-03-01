@@ -13,36 +13,36 @@ jobs:
   publish-docs:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       pages: write
       id-token: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
 
-      - name: Install pkgsite
-        run: go install golang.org/x/pkgsite/cmd/pkgsite@latest
+      - name: Generate docs with doc2go
+        uses: abhinav/doc2go@v2.4.1
+        with:
+          module: github.com/wxcuop/gofixmsg
 
-      - name: Generate API Documentation
-        run: |
-          mkdir -p docs/api
-          cd gofixmsg
-          
-          # Generate HTML docs for each package using go doc
-          packages=("engine" "fixmsg" "network" "state" "store" "handler" "heartbeat" "scheduler" "fixmsg/codec" "fixmsg/spec")
-          
-          for pkg in "${packages[@]}"; do
-            echo "Generating docs for $pkg..."
-            go doc -html "./$(dirname $pkg)" > "../docs/api/${pkg//\//-}.html" 2>/dev/null || go doc -html "./$pkg" > "../docs/api/${pkg//\//-}.html" 2>/dev/null || true
-          done
+      - name: Upload docs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation
+          path: out/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out/
+          destination_dir: godoc
           
           # Generate index
           cat > ../docs/api/index.html << 'EOF'
