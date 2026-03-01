@@ -1,95 +1,122 @@
-# Contributing
+# Contributing to GoFixMsg
 
-When contributing to this repository, please first discuss the change you wish
-to make via issue, email, or any other method with the owners of this repository
-before making a change.
+Thank you for your interest in contributing to GoFixMsg! This document outlines guidelines for contributing to the Go implementation of the FIX protocol library.
 
-Please note we have a code of conduct, please follow it in all your interactions
-with the project.
+## Code Organization
 
-## Pull Request Process
+GoFixMsg is organized into focused packages:
 
-1. Ensure any install or build dependencies are removed before the end of the
-   layer when doing a build.
-2. Update the README.md/sphinx docs with details of changes to API, behaviour,
-   features, or usage. Include useful file locations and relevant documentation.
-3. Ensure you have signed the Contributor License Agreement available from
-   eti-python-oss [at] morganstanley.com
-4. You may merge the Pull Request in once the build has passed and you have the
-   sign-off of one other developer, or if you do not have permission to do that,
-   you may request the reviewer to merge it for you.
+- **engine/** - Core session management and FIX engine implementation
+- **fixmsg/** - FIX message parsing, serialization, codec
+- **handler/** - Message handler registration and dispatch
+- **network/** - Network connections (Initiator/Acceptor)
+- **store/** - Message persistence (SQLite)
+- **state/** - Session state machine
+- **heartbeat/** - Heartbeat and test request logic
+- **scheduler/** - Scheduled session actions
+- **integration/** - End-to-end integration tests
 
-## Code of Conduct
+## Before You Start
 
-### Our Pledge
+1. **Review existing code**: Familiarize yourself with the package structure and coding patterns
+2. **Check open issues/discussions**: Your idea might already be under discussion
+3. **Follow Go conventions**: Use `go fmt`, `go vet`, and write idiomatic Go code
+4. **Write tests**: All new features require unit and/or integration tests
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, gender identity and expression, level of experience,
-nationality, personal appearance, race, religion, or sexual identity and
-orientation.
+## Development Workflow
 
-### Our Standards
+1. **Create a feature branch**: `git checkout -b feature/your-feature`
+2. **Make changes**: Keep commits focused and well-documented
+3. **Test locally**:
+   ```bash
+   go test ./... -v
+   ```
+4. **Lint and format**:
+   ```bash
+   go fmt ./...
+   go vet ./...
+   ```
+5. **Commit with clear messages**: Reference any related issues
 
-Examples of behavior that contributes to creating a positive environment
-include:
+## Testing Guidelines
 
-* Using welcoming and inclusive language
-* Being respectful of differing viewpoints and experiences
-* Gracefully accepting constructive criticism
-* Focusing on what is best for the community
-* Showing empathy towards other community members
+- **Unit tests** go in `*_test.go` files alongside the code being tested
+- **Integration tests** go in `integration/` for full end-to-end scenarios
+- **Coverage**: Aim for high coverage; use `go test -cover ./...`
+- **Test markers**: Use `t.Parallel()` where appropriate for faster parallel test execution
 
-Examples of unacceptable behavior by participants include:
+## Code Style
 
-* The use of sexualized language or imagery and unwelcome sexual attention or
-advances
-* Trolling, insulting/derogatory comments, and personal or political attacks
-* Public or private harassment
-* Publishing others' private information, such as a physical or electronic
-  address, without explicit permission
-* Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+- Follow standard Go conventions and the [Effective Go](https://golang.org/doc/effective_go) guide
+- Use clear, descriptive variable and function names
+- Document exported types, functions, and constants with comment strings
+- Keep functions focused and testable
+- Use interfaces for abstraction where it adds value
 
-### Our Responsibilities
+## Submitting Changes
 
-Project maintainers are responsible for clarifying the standards of acceptable
-behavior and are expected to take appropriate and fair corrective action in
-response to any instances of unacceptable behavior.
+1. **Push your branch** to your fork
+2. **Open a pull request** with a clear description of:
+   - What problem it solves or feature it adds
+   - How it was tested
+   - Any breaking changes (if applicable)
+3. **Respond to review feedback** promptly
 
-Project maintainers have the right and responsibility to remove, edit, or
-reject comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to this Code of Conduct, or to ban temporarily or
-permanently any contributor for other behaviors that they deem inappropriate,
-threatening, offensive, or harmful.
+## Commit Message Format
 
-### Scope
+```
+[component] Brief summary
 
-This Code of Conduct applies both within project spaces and in public spaces
-when an individual is representing the project or its community. Examples of
-representing a project or community include using an official project e-mail
-address, posting via an official social media account, or acting as an appointed
-representative at an online or offline event. Representation of a project may be
-further defined and clarified by project maintainers.
+Detailed explanation of the change and why it was needed.
+Include any fixes or references to issues.
 
-### Enforcement
+Fixes: #123
+```
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at treadmill-core [at] morganstanley.com. All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
+Example:
+```
+[engine] Add support for reconnect backoff strategy
 
-Project maintainers who do not follow or enforce the Code of Conduct in good
-faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership.
+Implements exponential backoff with jitter for session reconnection attempts.
+Allows configuration via backoff_strategy config parameter.
 
-### Attribution
+Fixes: #45
+```
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage],
-version 1.4, available at [http://contributor-covenant.org/version/1/4][version]
+## Adding New Message Handlers
 
-[homepage]: http://contributor-covenant.org
-[version]: http://contributor-covenant.org/version/1/4/
+1. Create a new handler type in `handler/handler.go` or a new file
+2. Implement the `async def handle()` method signature
+3. Register the handler in `engine/engine.go` handler map
+4. Add unit tests in `handler/*_test.go`
+5. Add integration test in `integration/`
+
+Example:
+```go
+type CustomHandler struct {
+    engine *Engine
+}
+
+func (h *CustomHandler) Handle(msg *fixmsg.FixMessage) error {
+    // Handle message logic
+    return nil
+}
+```
+
+## Reporting Issues
+
+- **Bug report**: Include steps to reproduce, expected vs actual behavior, Go version
+- **Feature request**: Describe the use case and desired behavior
+- **Documentation**: Suggest improvements or point out unclear sections
+
+## Questions?
+
+- Check the [documentation](gofixmsg/doc/)
+- Review [integration tests](integration/) for usage examples
+- Look at the [examples](examples/) for sample applications
+
+## Licensing
+
+By contributing to GoFixMsg, you agree that your contributions will be licensed under the same license as the project. See LICENSE.md.
+
+Thank you for helping make GoFixMsg better!

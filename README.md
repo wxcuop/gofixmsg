@@ -1,65 +1,79 @@
-Pyfixmsg_plus
-========
+# GoFixMsg
 
-![Lifecycle:Experimental](https://img.shields.io/badge/Lifecycle-Experimental-339999)
-![Status:Deprecated](https://img.shields.io/badge/Status-Deprecated-red)
+A high-performance FIX (Financial Information eXchange) protocol implementation written in Go.
 
-> **⚠️ DEPRECATION NOTICE**: The Python implementation of the FIX engine is now deprecated. 
-> Development has moved to the Go-based rewrite located in the `gorewrite/` directory.
-> All new features and performance improvements will be implemented in Go.
-> See the [Go-First Migration Guide](gorewrite/doc/migration.md) for details.
+## Overview
 
-``pyfixmsg_plus``is a library for parsing, manipulating and serialising [FIX](http://www.fixtradingcommunity.org)
-messages, primarily geared towards testing forked from https://github.com/morganstanley/pyfixmsg with experimental fixsession management supporting TCP and SSL fix sessions
+GoFixMsg is a complete rewrite of the FIX session management library, providing robust FIX protocol support with:
 
-Objectives
------------
- * provide a rich API to compare and manipulate messages. 
- * (mostly) Message type agnostic,
- * (mostly) value types agnostic
- * pluggable : load specification XML files, custom specifications or build your own Specification class for repeating
- groups definitions and message types, define your own codec for custom serialisation or deserialisation quirks.
+- **async-first architecture** using goroutines for concurrent session handling
+- **state machine-based session management** (Disconnected → Connecting → AwaitingLogon → LoggedOn)
+- **flexible message handlers** for custom FIX message processing
+- **persistent message stores** with SQLite support
+- **TLS/SSL support** for secure connections
+- **heartbeat and test request management**
+- **multi-session support** with configurable scheduling
 
+## Directory Structure
 
-Dependencies
-------------
- * ``six`` library (at least version 1.16.0).
- * python 3.11, 3.12, 3.13
- * Optional [lxml](http://lxml.de) for faster parsing of xml specification files.
- * Optional pytest, pytest-timeout to run the tests.
- * Optional [spec files from quickfix](https://github.com/quickfix/quickfix/tree/master/spec) to get started with 
- standard FIX specifications.
- 
- 
-Core classes
-------------
- * `FixMessage`. Inherits from ``dict``. Workhorse class. By default comes with a codec that will parse standard-looking
- ``FIX``, but without support repeating groups.
- * `Codec` defines how to parse a buffer into a FixMessage, and how to serialise it back
- * `Spec` defines the ``FIX`` specification to follow. Only required for support of repeating group. Defined from 
- Quickfix's spec XML files.
- 
+- `engine/` - Core FIX engine and state machine
+- `fixmsg/` - FIX message parsing, serialization, and codec
+- `handler/` - Message handler framework
+- `network/` - Network connection management (Initiator/Acceptor)
+- `store/` - Message persistence layer
+- `state/` - Session state management
+- `heartbeat/` - Heartbeat and test request logic
+- `scheduler/` - Scheduled tasks for session actions
+- `integration/` - Integration tests
+- `examples/` - Example applications
 
-How to run the tests
---------------------
- * `` pytest --spec=/var/tmp/FIX44.xml `` will launch the tests against the spec file in /var/tmp. You will need to load
- the [spec files from quickfix](https://github.com/quickfix/quickfix/tree/master/spec) to get the tests to work. 
- The spec files are not included in this distribution.
+## Requirements
 
+- Go 1.21 or later
+- SQLite3 (for message persistence)
 
-Notes
------
-This is  a FIX message library that includes simple  FIX session management system.  It does not contain an order management 
-core. It is purely message parsing-manipulation-serialisation and focused on testing. 
+## Building
 
-More documentation
-------------------
-Read the [documentation](http://pyfixmsg.readthedocs.io/), or browse the [examples](examples/pyfixmsg_example.py) file for 
-many examples
+```bash
+cd gofixmsg
+go build ./...
+```
 
-* https://wxcuop.github.io/pyfixmsg_plus/index.html
+## Running Tests
 
-Go-First Migration Guide
-------------------------
-For users migrating from the Python implementation to the Go-based rewrite (`gorewrite`), please see the [Go-First Migration Guide](gorewrite/doc/migration.md).
- 
+```bash
+cd gofixmsg
+go test ./... -v
+```
+
+## Configuration
+
+Configuration is managed via `.ini` files. See `examples/config.ini` for an example configuration with:
+
+- Connection settings (host, port, sender/target IDs)
+- Message store configuration
+- Heartbeat intervals
+- TLS settings
+
+## QuickStart
+
+See `examples/` for complete initiator and acceptor applications demonstrating:
+
+- Creating a FIX engine
+- Connecting as initiator or acceptor
+- Sending and receiving messages
+- Handling session callbacks
+
+## Legacy Python Code
+
+The original Python implementation is archived in `zz_archive/`. It remains fully functional but is no longer actively maintained. The Go rewrite is the recommended implementation for new projects.
+
+## Documentation
+
+- [Architecture & Design](gofixmsg/doc/plan.md) - High-level system design
+- [Phase 31/32 Plan](gofixmsg/doc/PHASE_31_32_PLAN.md) - Development roadmap
+- [FIX Protocol Spec Integration](gofixmsg/doc/spec/) - QuickFIX XML spec handling
+
+## License
+
+See LICENSE.md for licensing information.
