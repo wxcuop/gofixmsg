@@ -46,6 +46,17 @@
 - [x] Initiator and Acceptor updated to use Conn wrapper
 - [x] *Conn implements net.Conn interface for backward compatibility
 
+### Phase 22-23: BodyLength Framing & Sequential Processing (COMPLETED)
+- [x] Phase 22: Implement BodyLength (tag 9) based framing in Session.readLoop
+- [x] Parse tag 9 value and use as frame delimiter instead of "10="
+- [x] Handle partial BodyLength reads across TCP packets
+- [x] Correctly skip "10=" appearing in message data fields
+- [x] Phase 23: Remove per-message goroutines from Session.readLoop
+- [x] Serialize message handling to guarantee sequential order
+- [x] 13 unit tests for BodyLength framing (edge cases, frame splits, data fields)
+- [x] 7 unit tests for sequential processing (concurrency verification, ordering)
+- [x] Merged to master with commit 3dd5e1f (27/27 engine tests passing)
+
 ## Pending Phases - Organized for Parallel Work
 
 ### 🔵 PARALLEL GROUP 1: Hardening & Testing (Independent)
@@ -80,35 +91,35 @@
 
 ---
 
-### 🟢 PARALLEL GROUP 2: Session Processing (Sequential within group)
+### 🟢 PARALLEL GROUP 2: Session Processing (Sequential within group) - COMPLETED ✅
 
-#### Phase 22: Robust Framing with BodyLength (tag 9)
-**Worktree:** `p22-23-session-framing` (combined)
-**Prerequisites:** None
-**Then:** Phase 23 depends on this
-**Estimated:** 1.5-2 hours
-- [ ] Implement BodyLength (tag 9) based framing in Session.readLoop
+#### Phase 22: Robust Framing with BodyLength (tag 9) - ✅ COMPLETED
+**Worktree:** `p22-23-session-framing` (combined) - Merged to master
+**Status:** DONE - Commit 3dd5e1f
+**Completed:** 1.5-2 hours
+- [x] Implement BodyLength (tag 9) based framing in Session.readLoop
   - Parse tag 9 value
   - Use as frame delimiter instead of "10="
   - Handle partial BodyLength reads
-- [ ] Add unit tests for partial reads
+- [x] Add unit tests for partial reads
   - Frame split mid-tag
   - Frame split mid-value
   - BodyLength in data field
-- [ ] Handle "10=" in data fields correctly
+- [x] Handle "10=" in data fields correctly
   - Checksum (tag 10) detection after BodyLength
   - Escape sequence handling
 
-#### Phase 23: Sequential Processing Guarantees
-**Depends On:** Phase 22 (BodyLength framing)
-**Estimated:** 1.5-2 hours
-- [ ] Remove per-message goroutines in Session.readLoop
+#### Phase 23: Sequential Processing Guarantees - ✅ COMPLETED
+**Depends On:** Phase 22 (BodyLength framing) - ✅ Satisfied
+**Status:** DONE - Merged with Phase 22
+**Completed:** 1.5-2 hours
+- [x] Remove per-message goroutines in Session.readLoop
   - Serialize message handling
   - Remove goroutine spawning
-- [ ] Ensure HandleIncoming called sequentially
+- [x] Ensure HandleIncoming called sequentially
   - Single-threaded message processing
   - Maintain exact sequence order
-- [ ] Verify sequence integrity in integration tests
+- [x] Verify sequence integrity in integration tests
   - Multi-message sequences
   - Validate MsgSeqNum ordering
 
@@ -155,9 +166,14 @@
 ---
 
 ## Test Coverage Summary
-- [x] All 55+ existing tests passing
-- [ ] 3 new tests for `BodyLength` framing (Phase 22)
-- [ ] 3 new tests for sequential processing (Phase 23)
+- [x] All 55+ existing tests passing (Phase 1-20)
+- [x] 13 new tests for `BodyLength` framing (Phase 22)
+- [x] 7 new tests for sequential processing (Phase 23)
+- [x] 27/27 engine tests passing after Phase 22-23 merge
+- [ ] 3 new tests for ResendRequest edge cases (Phase 21)
+- [ ] 3 new tests for FIX dictionary validation (Phase 24)
+- [ ] 3 new tests for multi-session support (Phase 25)
+- [ ] 3 new tests for package reorganization (Phase 26)
 - [ ] 3 new tests for hardened `ResendRequest` (Phase 21)
 - [ ] 3 new tests for dictionary validation (Phase 24)
 - [ ] 1+ integration tests for multi-session (Phase 25)
