@@ -33,17 +33,65 @@ jobs:
           mkdir -p docs/api
           cd gofixmsg
           
-          # Generate HTML documentation for all packages using go doc
-          go doc -html ./engine > ../docs/api/engine.html
-          go doc -html ./fixmsg > ../docs/api/fixmsg.html
-          go doc -html ./fixmsg/codec > ../docs/api/codec.html
-          go doc -html ./fixmsg/spec > ../docs/api/spec.html
-          go doc -html ./network > ../docs/api/network.html
-          go doc -html ./state > ../docs/api/state.html
-          go doc -html ./store > ../docs/api/store.html
-          go doc -html ./handler > ../docs/api/handler.html
-          go doc -html ./heartbeat > ../docs/api/heartbeat.html
-          go doc -html ./scheduler > ../docs/api/scheduler.html
+          # Create a script to generate HTML docs from go doc output
+          cat > generate_docs.sh << 'GENEOF'
+          #!/bin/bash
+          
+          # Function to escape HTML
+          html_escape() {
+              sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'\''/\&#39;/g'
+          }
+          
+          # Function to generate HTML for a package
+          gen_doc() {
+              local pkg="$1"
+              local title="$2"
+              local file="../docs/api/${pkg##*/}.html"
+              
+              cat > "$file" << "EOF"
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>$title - GoFixMsg</title>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>
+                  body { font-family: monospace; margin: 20px; line-height: 1.6; }
+                  h1 { color: #667eea; border-bottom: 2px solid #667eea; }
+                  pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; }
+                  a { color: #667eea; }
+                  .back { color: #999; }
+              </style>
+          </head>
+          <body>
+              <p class="back"><a href="index.html">← Back to Index</a></p>
+              <h1>$title</h1>
+              <pre>
+          EOF
+              go doc -all "$pkg" | html_escape >> "$file"
+              cat >> "$file" << "EOF"
+              </pre>
+              <p class="back"><a href="index.html">← Back to Index</a></p>
+          </body>
+          </html>
+          EOF
+          }
+          
+          # Generate docs for all packages
+          gen_doc "./engine" "engine - FIX Session Engine"
+          gen_doc "./fixmsg" "fixmsg - FIX Message"
+          gen_doc "./fixmsg/codec" "codec - Message Codec"
+          gen_doc "./fixmsg/spec" "spec - FIX Specification"
+          gen_doc "./network" "network - Network Connection"
+          gen_doc "./state" "state - State Machine"
+          gen_doc "./store" "store - Message Store"
+          gen_doc "./handler" "handler - Message Handler"
+          gen_doc "./heartbeat" "heartbeat - Heartbeat Monitor"
+          gen_doc "./scheduler" "scheduler - Scheduler"
+          GENEOF
+          
+          chmod +x generate_docs.sh
+          ./generate_docs.sh
           
           # Create main index page
           cat > ../docs/api/index.html << 'INDEXEOF'
@@ -188,7 +236,7 @@ jobs:
               </section>
               
               <footer>
-                  <p>GoFixMsg API Documentation - Generated on page load</p>
+                  <p>GoFixMsg API Documentation</p>
               </footer>
           </body>
           </html>
