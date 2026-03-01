@@ -1,7 +1,7 @@
 # Go Rewrite Plan
 
 ## Goal
-Incrementally rewrite the Python pyfixmsg FIX engine into Go while preserving behavior and maintaining test coverage at each step. The Go version runs from `gorewrite/`, with unit and integration tests validating each phase.
+The Go version runs from `gofixmsg/`, with unit and integration tests validating each phase.
 
 ## Approach
 
@@ -195,7 +195,7 @@ go test -v -run TestReconnectBackoff  # Specific test
 
 ## Success Criteria
 
-✅ Phase 1-16: Functional FIX engine with persistent sequences, heartbeat monitoring, and reconnect/backoff
+Phase 1-16: Functional FIX engine with persistent sequences, heartbeat monitoring, and reconnect/backoff
 - [x] Logon/Logout flows working over TCP
 - [x] Heartbeat exchange with TestRequest escalation
 - [x] Message sequence persistence and recovery
@@ -204,7 +204,7 @@ go test -v -run TestReconnectBackoff  # Specific test
 - [x] Config-driven tuning of heartbeat, CompIDs, reconnect params
 
 Future phases (17-21):
-- [ ] Application callbacks for message filtering
-- [ ] State machine event visibility
-- [ ] TLS support from config
-- [ ] Edge case ResendRequest/GapFill matching Python behavior
+- [x] Application callbacks for message filtering
+- [x] State machine event visibility
+- [x] TLS support from config
+- [x] Edge case ResendRequest/GapFill matching Python behavior
