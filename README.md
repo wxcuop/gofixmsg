@@ -2,6 +2,12 @@ Pyfixmsg_plus
 ========
 
 ![Lifecycle:Experimental](https://img.shields.io/badge/Lifecycle-Experimental-339999)
+![Status:Deprecated](https://img.shields.io/badge/Status-Deprecated-red)
+
+> **⚠️ DEPRECATION NOTICE**: The Python implementation of the FIX engine is now deprecated. 
+> Development has moved to the Go-based rewrite located in the `gorewrite/` directory.
+> All new features and performance improvements will be implemented in Go.
+> See the [Go-First Migration Guide](gorewrite/doc/migration.md) for details.
 
 ``pyfixmsg_plus``is a library for parsing, manipulating and serialising [FIX](http://www.fixtradingcommunity.org)
 messages, primarily geared towards testing forked from https://github.com/morganstanley/pyfixmsg with experimental fixsession management supporting TCP and SSL fix sessions

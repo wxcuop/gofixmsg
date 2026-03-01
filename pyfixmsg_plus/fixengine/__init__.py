@@ -1,3 +1,12 @@
+import warnings
+
+warnings.warn(
+    "The Python FIX engine is deprecated and will be removed in a future release. "
+    "Please migrate to the Go-based implementation in the 'gorewrite' directory.",
+    DeprecationWarning,
+    stacklevel=2
+)
+
 from .engine import FixEngine
 from .configmanager import ConfigManager
 from .heartbeat import Heartbeat

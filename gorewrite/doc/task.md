@@ -200,7 +200,8 @@
 4. ✅ Phase 26: Package Reorganization (1-2 hrs) - COMPLETE
 
 **Previous execution:** ~4-5 hours elapsed with parallel work vs 12-14 hours sequential
-**Current status:** Core rewrite complete (26/26); post-core parity/sunset phases (27-31) complete ✅
+**Current status:** Core rewrite complete (26/26); post-core parity/sunset phases (27-32) complete ✅
+
 
 ---
 
@@ -285,7 +286,7 @@ Phase 31 ──┘
 
 ---
 
-### 🟣 PARALLEL GROUP 7: Migration & Sunset Execution
+### 🟣 PARALLEL GROUP 7: Migration & Sunset Execution ✅ COMPLETED
 
 #### Phase 31: Go-First Docs, Examples, and Migration Guide ✅ COMPLETED
 **Worktree:** `p31-go-docs-migration`
@@ -293,14 +294,14 @@ Phase 31 ──┘
 - [x] Document Python → Go API/config mapping in `gorewrite/doc/migration.md`
 - [x] Add production cutover and rollback checklist in `gorewrite/doc/migration.md`
 
-#### Phase 32: Python Sunset Readiness Gate
+#### Phase 32: Python Sunset Readiness Gate ✅ COMPLETED
 **Worktree:** `p32-sunset-gate`
 **Depends On:** Phase 27, Phase 28, Phase 29, Phase 30, Phase 31
-**Status:** ⏳ READY TO START
-- [ ] Define and enforce final sunset gate criteria
-  - `go test ./...` green
-  - integration suite green
-  - TLS validation complete
-  - migration docs/examples published
-- [ ] Mark Python runtime as deprecated only after gate passes
-- [ ] Publish sunset recommendation with explicit risk assessment
+**Status:** ✅ COMPLETE
+- [x] Define and enforce final sunset gate criteria
+  - `go test ./...` green ✅
+  - integration suite green ✅
+  - TLS validation complete ✅
+  - migration docs/examples published ✅
+- [x] Mark Python runtime as deprecated only after gate passes
+- [x] Publish sunset recommendation with explicit risk assessment in `gorewrite/doc/sunset_recommendation.md`
