@@ -151,7 +151,7 @@ defer t.mu.Unlock()
 *t.callOrder = append(*t.callOrder, ...)
 ```
 
-See [DEVELOPER.md](gofixmsg/DEVELOPER.md#data-race-prevention) for:
+See [DEVELOPER.md](../gofixmsg/DEVELOPER.md#concurrency-and-threading) for:
 - Critical synchronization points (FixEngine.attachMu, Heartbeat.mu, Session.mu)
 - Initialization order principles
 - How to use `go test -race ./...` for validation

@@ -17,6 +17,7 @@ func TestSQLiteStore_SaveGet(t *testing.T) {
 
 	st := store.NewSQLiteStore()
 	require.NoError(t, st.Init(f.Name()))
+	defer st.Close()
 
 	m := &store.Message{
 		BeginString:  "FIX.4.4",

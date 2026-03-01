@@ -113,3 +113,11 @@ func (s *SQLiteStore) GetSessionSeq(sessionID string) (outSeq int, inSeq int, er
 	}
 	return outSeq, inSeq, nil
 }
+
+// Close closes the database connection. Must be called before deleting the database file.
+func (s *SQLiteStore) Close() error {
+	if s.db != nil {
+		return s.db.Close()
+	}
+	return nil
+}

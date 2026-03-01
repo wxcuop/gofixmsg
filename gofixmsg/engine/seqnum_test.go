@@ -12,6 +12,7 @@ func TestSeqManager_Basic(t *testing.T) {
 	st := store.NewSQLiteStore()
 	f := t.TempDir() + "/seq.db"
 	require.NoError(t, st.Init(f))
+	defer st.Close()
 
 	m := engine.NewSeqManager(st, "S-T-127.0.0.1:1")
 	// initial out may be zero
@@ -31,6 +32,7 @@ func TestSeqManager_Persistence(t *testing.T) {
 	st := store.NewSQLiteStore()
 	f := t.TempDir() + "/persist.db"
 	require.NoError(t, st.Init(f))
+	defer st.Close()
 
 	sid := "session-123"
 	m := engine.NewSeqManager(st, sid)
