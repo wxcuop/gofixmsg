@@ -83,6 +83,22 @@ func main() {
 - **Python**: Uses a single-threaded event loop (`asyncio`). Blocking operations can starve the session.
 - **Go**: Uses lightweight goroutines. Each session's read/write loops run independently.
 
+### Database Concurrency (SQLite)
+SQLite is single-threaded, but the two implementations handle this differently:
+
+**Python**:
+- Uses `asyncio.Lock` to serialize all database operations
+- Each `SaveMessage()`, `GetMessage()`, etc. call acquires the lock before accessing SQLite
+- Ensures serialized access but requires explicit lock management
+
+**Go**:
+- Uses the `modernc.org/sqlite` driver, which internally serializes database operations
+- Enables WAL mode (`PRAGMA journal_mode=WAL`) for better concurrent read performance
+- Multiple goroutines can call `SaveMessage()`, `GetMessage()` simultaneously without explicit locking—the driver queues operations internally
+- Result: Go applications achieve higher throughput with thousands of concurrent sessions reading/writing to the same database
+
+**Key takeaway**: Go eliminates the need for application-level database locks; concurrency is handled transparently by the driver + WAL pragmas, allowing free goroutine concurrency at the application level while SQLite operations remain safely serialized underneath.
+
 ### Error Handling
 - **Python**: Uses exceptions (`raise`, `try/except`).
 - **Go**: Uses explicit error returns (`func() (val, error)`).

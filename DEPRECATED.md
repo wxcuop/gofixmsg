@@ -124,13 +124,11 @@ Before deprecating, we verified:
 
 ### For Python Users
 
-- **Existing Code**: The Python code is frozen and will not receive new features
-- **Bug Fixes**: Only critical security fixes will be backported
 - **Support**: Refer to archived documentation in `zz_archive/`
 
 ### For Go Users
 
-- **New Implementations**: Recommend using `gofixmsg` (this module)
+- **New Implementations**: use `gofixmsg` (this module)
 - **Documentation**: See [gofixmsg/doc/](../gofixmsg/doc/)
 - **Examples**: Ready-to-run examples in [gofixmsg/examples/](../gofixmsg/examples/)
 
@@ -141,7 +139,4 @@ Before deprecating, we verified:
 - [GoFixMsg Examples](../gofixmsg/examples/)
 - [GoFixMsg README](../README.md)
 
----
 
-**This deprecation was approved:** March 1, 2026  
-**Next Review Date:** TBD (after major Go release)
