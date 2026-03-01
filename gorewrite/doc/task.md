@@ -179,9 +179,9 @@
 
 ### ✅ Overall Test Status
 - **Engine Tests:** 57/57 PASSING ✅
-- **Integration Tests:** 2/5 PASSING (3 deferred - complex async timing)
-- **Overall Pass Rate:** 95% (57/60 tests)
-- **Core Logic Coverage:** Comprehensive (all engine components)
+- **Integration Tests:** 5/5 PASSING ✅
+- **Overall Pass Rate:** Integration suite is green; `go test ./...` still has build failures in `engine/handler` unit tests
+- **Core Logic Coverage:** Comprehensive for engine and integration paths; remaining work is handler test harness updates
 
 ---
 
