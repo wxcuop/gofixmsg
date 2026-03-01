@@ -31,12 +31,8 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-
-      - name: Cache Go modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('gofixmsg/go.sum') }}
+          cache: true
+          cache-dependency-path: gofixmsg/go.sum
 
       - name: Download dependencies
         working-directory: ./gofixmsg
