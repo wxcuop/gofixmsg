@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net"
 	"strconv"
 	"testing"
@@ -313,4 +314,169 @@ func TestLogonHandler_ResetSeqNumFlagNo(t *testing.T) {
 
 	assert.Equal(t, 100, fe.seqMgr.Outgoing(), "Outgoing sequence should NOT be reset")
 	assert.Equal(t, 100, fe.seqMgr.Incoming(), "Incoming sequence should NOT be reset")
+}
+
+// TestProcessor_OnMessageCallbackForAppMessages verifies OnMessage is called after successful FromApp
+func TestProcessor_OnMessageCallbackForAppMessages(t *testing.T) {
+	callLog := []string{}
+	
+	mockApp := &mockApplicationForOnMessage{
+		log: &callLog,
+	}
+	
+	proc := NewProcessor()
+	proc.SetApplication(mockApp)
+	proc.SetGetSessionIDFn(func() string { return "test-session" })
+	
+	// Register handler for app message (NewOrder - D)
+	proc.Register("D", func(m *fixmsg.FixMessage) error {
+		*mockApp.log = append(*mockApp.log, "handler")
+		return nil
+	})
+	
+	// Create app message
+	appMsg := fixmsg.NewFixMessageFromMap(map[int]string{
+		8: "FIX.4.4", 35: "D", 49: "SENDER", 56: "TARGET", 34: "1",
+	})
+	appMsg.SetLenAndChecksum()
+	
+	err := proc.Process(appMsg)
+	assert.NoError(t, err)
+	
+	// Verify callback order: FromApp → OnMessage → handler
+	assert.Equal(t, []string{"FromApp", "OnMessage", "handler"}, callLog)
+}
+
+// TestProcessor_OnMessageNotCalledForAdminMessages verifies OnMessage is NOT called for admin messages
+func TestProcessor_OnMessageNotCalledForAdminMessages(t *testing.T) {
+	callLog := []string{}
+	
+	mockApp := &mockApplicationForOnMessage{
+		log: &callLog,
+	}
+	
+	proc := NewProcessor()
+	proc.SetApplication(mockApp)
+	proc.SetGetSessionIDFn(func() string { return "test-session" })
+	
+	// Register handler for admin message (Logon - A)
+	proc.Register("A", func(m *fixmsg.FixMessage) error {
+		*mockApp.log = append(*mockApp.log, "handler")
+		return nil
+	})
+	
+	// Create admin message
+	adminMsg := fixmsg.NewFixMessageFromMap(map[int]string{
+		8: "FIX.4.4", 35: "A", 49: "SENDER", 56: "TARGET", 34: "1", 52: "20260228-10:00:00.000",
+	})
+	adminMsg.SetLenAndChecksum()
+	
+	err := proc.Process(adminMsg)
+	assert.NoError(t, err)
+	
+	// Verify OnMessage NOT called for admin messages (only handler called)
+	assert.Equal(t, []string{"handler"}, callLog, "OnMessage should not be called for admin messages")
+}
+
+// TestProcessor_OnMessageNotCalledAfterFromAppReject verifies OnMessage is NOT called if FromApp rejects
+func TestProcessor_OnMessageNotCalledAfterFromAppReject(t *testing.T) {
+	callLog := []string{}
+	
+	mockApp := &mockApplicationForOnMessage{
+		log:          &callLog,
+		fromAppError: true, // FromApp will reject
+	}
+	
+	proc := NewProcessor()
+	proc.SetApplication(mockApp)
+	proc.SetGetSessionIDFn(func() string { return "test-session" })
+	
+	// Register handler for app message (NewOrder - D)
+	proc.Register("D", func(m *fixmsg.FixMessage) error {
+		*mockApp.log = append(*mockApp.log, "handler")
+		return nil
+	})
+	
+	// Create app message
+	appMsg := fixmsg.NewFixMessageFromMap(map[int]string{
+		8: "FIX.4.4", 35: "D", 49: "SENDER", 56: "TARGET", 34: "1",
+	})
+	appMsg.SetLenAndChecksum()
+	
+	err := proc.Process(appMsg)
+	assert.Error(t, err) // FromApp rejection should propagate
+	
+	// Verify: FromApp → OnReject, but NOT handler or OnMessage
+	assert.Equal(t, []string{"FromApp", "OnReject"}, callLog)
+	assert.NotContains(t, callLog, "handler", "handler should not be called after FromApp rejection")
+	assert.NotContains(t, callLog, "OnMessage", "OnMessage should not be called after FromApp rejection")
+}
+
+// TestProcessor_OnMessageSessionIDPassThrough verifies sessionID is correctly passed to OnMessage
+func TestProcessor_OnMessageSessionIDPassThrough(t *testing.T) {
+	var capturedSessionID string
+	
+	mockApp := &mockApplicationForOnMessage{
+		onMessageFunc: func(sid string) {
+			capturedSessionID = sid
+		},
+	}
+	
+	proc := NewProcessor()
+	proc.SetApplication(mockApp)
+	expectedSessionID := "SV-CL-127.0.0.1:9999"
+	proc.SetGetSessionIDFn(func() string { return expectedSessionID })
+	
+	// Register handler for app message
+	proc.Register("D", func(m *fixmsg.FixMessage) error {
+		return nil
+	})
+	
+	// Process app message
+	appMsg := fixmsg.NewFixMessageFromMap(map[int]string{
+		8: "FIX.4.4", 35: "D", 49: "SENDER", 56: "TARGET", 34: "1",
+	})
+	appMsg.SetLenAndChecksum()
+	
+	err := proc.Process(appMsg)
+	assert.NoError(t, err)
+	
+	// Verify sessionID was passed correctly to OnMessage
+	assert.Equal(t, expectedSessionID, capturedSessionID)
+}
+
+// Mock Application for testing OnMessage callbacks
+type mockApplicationForOnMessage struct {
+	log            *[]string
+	fromAppError   bool
+	onMessageFunc  func(sid string)
+}
+
+func (m *mockApplicationForOnMessage) OnCreate(sessionID string) {}
+func (m *mockApplicationForOnMessage) OnLogon(sessionID string) {}
+func (m *mockApplicationForOnMessage) OnLogout(sessionID string) {}
+func (m *mockApplicationForOnMessage) ToAdmin(msg *fixmsg.FixMessage, sessionID string) error { return nil }
+func (m *mockApplicationForOnMessage) FromAdmin(msg *fixmsg.FixMessage, sessionID string) error { return nil }
+func (m *mockApplicationForOnMessage) ToApp(msg *fixmsg.FixMessage, sessionID string) error { return nil }
+func (m *mockApplicationForOnMessage) FromApp(msg *fixmsg.FixMessage, sessionID string) error {
+	if m.log != nil {
+		*m.log = append(*m.log, "FromApp")
+	}
+	if m.fromAppError {
+		return fmt.Errorf("FromApp rejection")
+	}
+	return nil
+}
+func (m *mockApplicationForOnMessage) OnMessage(msg *fixmsg.FixMessage, sessionID string) {
+	if m.log != nil {
+		*m.log = append(*m.log, "OnMessage")
+	}
+	if m.onMessageFunc != nil {
+		m.onMessageFunc(sessionID)
+	}
+}
+func (m *mockApplicationForOnMessage) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string) {
+	if m.log != nil {
+		*m.log = append(*m.log, "OnReject")
+	}
 }
