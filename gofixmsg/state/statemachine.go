@@ -89,6 +89,10 @@ func (s *StateMachine) OnEvent(event string) (string, error) {
 		if event == EventConnect {
 			next = StateConnecting
 			transitionFound = true
+		} else if event == EventLogoutReceived || event == EventLogonReceived {
+			// Gracefully ignore logon/logout events received during shutdown
+			next = StateDisconnected
+			transitionFound = true
 		}
 	case StateConnecting:
 		if event == EventConnected {
