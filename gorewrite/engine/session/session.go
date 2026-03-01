@@ -204,6 +204,13 @@ func (s *Session) writeLoop() {
 				_ = s.Conn.Close()
 				return
 			}
+			// Flush if the underlying connection uses buffered I/O (e.g. network.Conn)
+			if flusher, ok := s.Conn.(interface{ Flush() error }); ok {
+				if ferr := flusher.Flush(); ferr != nil {
+					_ = s.Conn.Close()
+					return
+				}
+			}
 		}
 	}
 }
