@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/gofixmsg/fixmsg"
 )
 
 // HeartbeatMonitor monitors inbound traffic and sends TestRequest when peer misses heartbeats.

@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
-	"github.com/wxcuop/pyfixmsg_plus/state"
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/fixmsg"
+	"github.com/wxcuop/gofixmsg/state"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 // MockStore for testing handlers

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 func TestSQLiteStore_SaveGet(t *testing.T) {

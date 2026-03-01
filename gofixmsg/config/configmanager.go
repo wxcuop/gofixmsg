@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/wxcuop/pyfixmsg_plus/crypt"
+	"github.com/wxcuop/gofixmsg/crypt"
 	"gopkg.in/ini.v1"
 )
 

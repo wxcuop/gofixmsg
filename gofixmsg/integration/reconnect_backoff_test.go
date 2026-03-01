@@ -5,10 +5,10 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/engine"
-	"github.com/wxcuop/pyfixmsg_plus/network"
-	"github.com/wxcuop/pyfixmsg_plus/state"
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/engine"
+	"github.com/wxcuop/gofixmsg/network"
+	"github.com/wxcuop/gofixmsg/state"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 // TestReconnectBackoff verifies that initiator reconnect backoff works

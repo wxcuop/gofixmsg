@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/handler"
+	"github.com/wxcuop/gofixmsg/handler"
 )
 
 type mockHandler struct{ called bool }

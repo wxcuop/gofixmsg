@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
-	"github.com/wxcuop/pyfixmsg_plus/engine/session"
+	"github.com/wxcuop/gofixmsg/engine/handler"
+	"github.com/wxcuop/gofixmsg/engine/session"
 )
 
 // TestHeartbeatMonitor_SendsTestRequestAndCloses verifies that the monitor

@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg/codec"
+	"github.com/wxcuop/gofixmsg/fixmsg"
+	"github.com/wxcuop/gofixmsg/fixmsg/codec"
 )
 
 // ProcessorIface is the minimal interface Session requires from a processor.

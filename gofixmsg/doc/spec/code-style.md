@@ -183,8 +183,8 @@ import (
     "golang.org/x/crypto/pbkdf2"
 
     // internal
-    "github.com/wxcuop/pyfixmsg_plus/fixmsg"
-    "github.com/wxcuop/pyfixmsg_plus/fixengine/state"
+    "github.com/wxcuop/gofixmsg/fixmsg"
+    "github.com/wxcuop/gofixmsg/fixengine/state"
 )
 ```
 

@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/engine"
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/engine"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 func TestSeqManager_Basic(t *testing.T) {

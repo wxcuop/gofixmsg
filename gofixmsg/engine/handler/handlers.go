@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
-	"github.com/wxcuop/pyfixmsg_plus/state"
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/fixmsg"
+	"github.com/wxcuop/gofixmsg/state"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 // Application defines callbacks for FIX session lifecycle and message events.

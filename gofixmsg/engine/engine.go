@@ -10,15 +10,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wxcuop/pyfixmsg_plus/config"
-	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
-	"github.com/wxcuop/pyfixmsg_plus/engine/session"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
-	"github.com/wxcuop/pyfixmsg_plus/heartbeat"
-	"github.com/wxcuop/pyfixmsg_plus/network"
-	"github.com/wxcuop/pyfixmsg_plus/scheduler"
-	"github.com/wxcuop/pyfixmsg_plus/state"
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/config"
+	"github.com/wxcuop/gofixmsg/engine/handler"
+	"github.com/wxcuop/gofixmsg/engine/session"
+	"github.com/wxcuop/gofixmsg/fixmsg"
+	"github.com/wxcuop/gofixmsg/heartbeat"
+	"github.com/wxcuop/gofixmsg/network"
+	"github.com/wxcuop/gofixmsg/scheduler"
+	"github.com/wxcuop/gofixmsg/state"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 // FixEngine holds components needed for a session.

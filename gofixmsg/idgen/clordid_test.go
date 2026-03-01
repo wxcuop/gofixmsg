@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/idgen"
+	"github.com/wxcuop/gofixmsg/idgen"
 )
 
 func TestNumericEncodeDecode(t *testing.T) {

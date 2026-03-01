@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wxcuop/pyfixmsg_plus/engine/session"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
-	"github.com/wxcuop/pyfixmsg_plus/heartbeat"
+	"github.com/wxcuop/gofixmsg/engine/session"
+	"github.com/wxcuop/gofixmsg/fixmsg"
+	"github.com/wxcuop/gofixmsg/heartbeat"
 )
 
 // AttachSession attaches an existing Session to the engine and starts monitor and heartbeat sender.

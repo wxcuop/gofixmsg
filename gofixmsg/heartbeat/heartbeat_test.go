@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/heartbeat"
+	"github.com/wxcuop/gofixmsg/heartbeat"
 )
 
 func TestHeartbeat(t *testing.T) {

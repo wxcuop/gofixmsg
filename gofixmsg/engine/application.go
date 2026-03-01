@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/gofixmsg/fixmsg"
 )
 
 // Application defines callbacks for FIX session lifecycle and message events.

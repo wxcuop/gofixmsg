@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/network"
+	"github.com/wxcuop/gofixmsg/network"
 )
 
 // Helper to generate a self-signed cert and key for testing

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/state"
+	"github.com/wxcuop/gofixmsg/state"
 )
 
 func TestStateMachine_Transitions(t *testing.T) {

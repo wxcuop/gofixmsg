@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/gofixmsg/fixmsg"
 )
 
 type fakeProcessor struct {

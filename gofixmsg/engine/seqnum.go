@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 // SeqManager manages incoming and outgoing sequence numbers and persists them to store.

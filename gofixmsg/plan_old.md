@@ -187,7 +187,7 @@ Config file (`config.ini`) is read by both. The `ENC:` format for secrets must r
 
 ```
 gorewrite/
-├── go.mod                          (module: github.com/wxcuop/pyfixmsg_plus)
+├── go.mod                          (module: github.com/wxcuop/gofixmsg)
 ├── fixmsg/
 │   ├── fixmessage.go
 │   ├── fragment.go

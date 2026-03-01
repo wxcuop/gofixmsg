@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg/codec"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg/spec"
+	"github.com/wxcuop/gofixmsg/fixmsg"
+	"github.com/wxcuop/gofixmsg/fixmsg/codec"
+	"github.com/wxcuop/gofixmsg/fixmsg/spec"
 )
 
 var minimalXML = []byte(`

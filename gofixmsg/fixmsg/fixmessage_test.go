@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/gofixmsg/fixmsg"
 )
 
 // ---- FixFragment tests ----

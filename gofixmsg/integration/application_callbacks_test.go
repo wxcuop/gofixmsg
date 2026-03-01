@@ -1,18 +1,18 @@
 package integration
 
 import (
-	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
-	"github.com/wxcuop/pyfixmsg_plus/engine/session"
+	"github.com/wxcuop/gofixmsg/engine/handler"
+	"github.com/wxcuop/gofixmsg/engine/session"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/engine"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
-	"github.com/wxcuop/pyfixmsg_plus/network"
-	"github.com/wxcuop/pyfixmsg_plus/state"
-	"github.com/wxcuop/pyfixmsg_plus/store"
+	"github.com/wxcuop/gofixmsg/engine"
+	"github.com/wxcuop/gofixmsg/fixmsg"
+	"github.com/wxcuop/gofixmsg/network"
+	"github.com/wxcuop/gofixmsg/state"
+	"github.com/wxcuop/gofixmsg/store"
 )
 
 // TestApplicationCallbacks demonstrates all Application interface callbacks:

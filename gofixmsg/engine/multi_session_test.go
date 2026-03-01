@@ -4,7 +4,7 @@ import (
 "testing"
 
 "github.com/stretchr/testify/require"
-"github.com/wxcuop/pyfixmsg_plus/engine"
+"github.com/wxcuop/gofixmsg/engine"
 )
 
 // TestMultiSessionEngine_Creation verifies the multi-session engine can be created.

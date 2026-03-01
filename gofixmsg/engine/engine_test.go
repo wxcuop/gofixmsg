@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/engine"
-	"github.com/wxcuop/pyfixmsg_plus/network"
+	"github.com/wxcuop/gofixmsg/engine"
+	"github.com/wxcuop/gofixmsg/network"
 )
 
 func TestEngineConnect(t *testing.T) {

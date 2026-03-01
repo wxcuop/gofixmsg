@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/network"
+	"github.com/wxcuop/gofixmsg/network"
 )
 
 // TestConnWrapper validates that Conn properly wraps net.Conn with Send/SetReadDeadline.

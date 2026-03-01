@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/gofixmsg/fixmsg"
 )
 
 func TestSessionSendQueue(t *testing.T) {

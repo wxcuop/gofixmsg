@@ -6,7 +6,7 @@ import (
 "sync"
 "time"
 
-"github.com/wxcuop/pyfixmsg_plus/config"
+"github.com/wxcuop/gofixmsg/config"
 )
 
 // ScheduleTask represents a single scheduled task from config

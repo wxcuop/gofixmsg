@@ -1,4 +1,4 @@
-module github.com/wxcuop/pyfixmsg_plus
+module github.com/wxcuop/gofixmsg
 
 go 1.24.0
 

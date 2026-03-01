@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/wxcuop/pyfixmsg_plus/config"
-	"github.com/wxcuop/pyfixmsg_plus/engine"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/gofixmsg/config"
+	"github.com/wxcuop/gofixmsg/engine"
+	"github.com/wxcuop/gofixmsg/fixmsg"
 )
 
 // ExampleApp implements the engine.Application interface for callback hooks.

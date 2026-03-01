@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/crypt"
+	"github.com/wxcuop/gofixmsg/crypt"
 )
 
 func TestEncryptDecrypt(t *testing.T) {
