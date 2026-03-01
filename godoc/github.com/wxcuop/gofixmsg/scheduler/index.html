@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>scheduler</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/scheduler<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package scheduler</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/scheduler&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#ScheduleAfter">func ScheduleAfter(d time.Duration, f func())</a></li>
+  <li>
+      <a href="#RuntimeScheduler">type RuntimeScheduler</a>
+      <ul>
+          <li><a href="#NewRuntimeScheduler">func NewRuntimeScheduler() *RuntimeScheduler</a></li>
+          <li><a href="#RuntimeScheduler.GetTasks">func (s *RuntimeScheduler) GetTasks() []ScheduleTask</a></li>
+          <li><a href="#RuntimeScheduler.Load">func (s *RuntimeScheduler) Load(mgr *config.Manager) error</a></li>
+          <li><a href="#RuntimeScheduler.RegisterAction">func (s *RuntimeScheduler) RegisterAction(name string, fn func())</a></li>
+          <li><a href="#RuntimeScheduler.Start">func (s *RuntimeScheduler) Start()</a></li>
+          <li><a href="#RuntimeScheduler.Stop">func (s *RuntimeScheduler) Stop()</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#ScheduleTask">type ScheduleTask</a>
+      </li>
+  </ul><h3 id="pkg-functions">Functions</h3>
+  <h3 id="ScheduleAfter">func ScheduleAfter</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">ScheduleAfter</span><span class="p">(</span><span class="nx">d</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Duration"><span class="nx">Duration</span></a><span class="p">,</span><span class="w"> </span><span class="nx">f</span><span class="w"> </span><span class="kd">func</span><span class="p">())</span></pre>
+    <p>ScheduleAfter runs f after duration d in a new goroutine (original simple scheduler)
+<h3 id="pkg-types">Types</h3>
+  <h3 id="RuntimeScheduler">type RuntimeScheduler</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">RuntimeScheduler</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>RuntimeScheduler manages config-driven scheduled actions
+<h4 id="NewRuntimeScheduler">func NewRuntimeScheduler</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewRuntimeScheduler</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#RuntimeScheduler"><span class="nx">RuntimeScheduler</span></a></pre>
+  <p>NewRuntimeScheduler creates a new scheduler (not started)
+<h4 id="RuntimeScheduler.GetTasks">func (*RuntimeScheduler) GetTasks</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#RuntimeScheduler"><span class="nx">RuntimeScheduler</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetTasks</span><span class="p">()</span><span class="w"> </span><span class="p">[]</span><a href="#ScheduleTask"><span class="nx">ScheduleTask</span></a></pre>
+  <p>GetTasks returns a copy of currently loaded tasks (for testing)
+<h4 id="RuntimeScheduler.Load">func (*RuntimeScheduler) Load</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#RuntimeScheduler"><span class="nx">RuntimeScheduler</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Load</span><span class="p">(</span><span class="nx">mgr</span><span class="w"> </span><span class="o">*</span><a href="../config"><span class="nx">config</span></a><span class="p">.</span><a href="../config#Manager"><span class="nx">Manager</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Load parses [Scheduler] schedules JSON from ConfigManager
+<h4 id="RuntimeScheduler.RegisterAction">func (*RuntimeScheduler) RegisterAction</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#RuntimeScheduler"><span class="nx">RuntimeScheduler</span></a><span class="p">)</span><span class="w"> </span><span class="nf">RegisterAction</span><span class="p">(</span><span class="nx">name</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">fn</span><span class="w"> </span><span class="kd">func</span><span class="p">())</span></pre>
+  <p>RegisterAction registers a handler for an action name
+<h4 id="RuntimeScheduler.Start">func (*RuntimeScheduler) Start</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#RuntimeScheduler"><span class="nx">RuntimeScheduler</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Start</span><span class="p">()</span></pre>
+  <p>Start begins the scheduler loop (runs in a goroutine)
+<h4 id="RuntimeScheduler.Stop">func (*RuntimeScheduler) Stop</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#RuntimeScheduler"><span class="nx">RuntimeScheduler</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Stop</span><span class="p">()</span></pre>
+  <p>Stop halts the scheduler
+<h3 id="ScheduleTask">type ScheduleTask</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">ScheduleTask</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="ScheduleTask.Time"><span class="nx">Time</span></span><span class="w">   </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w"> </span><span class="s">`json:&#34;time&#34;`</span><span class="w">   </span><span class="c1">// HH:MM format</span><span class="w">
+</span><span class="w">	</span><span id="ScheduleTask.Action"><span class="nx">Action</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w"> </span><span class="s">`json:&#34;action&#34;`</span><span class="w"> </span><span class="c1">// start, stop/logout, reset, reset_start</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>ScheduleTask represents a single scheduled task from config
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

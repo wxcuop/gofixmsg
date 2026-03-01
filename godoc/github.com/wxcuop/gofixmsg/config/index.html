@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>config</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/config<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package config</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/config&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li>
+      <a href="#Manager">type Manager</a>
+      <ul>
+          <li><a href="#GetManager">func GetManager() *Manager</a></li>
+          <li><a href="#Manager.Get">func (m *Manager) Get(section, key string) string</a></li>
+          <li><a href="#Manager.GetDecrypted">func (m *Manager) GetDecrypted(section, key, passphrase string) (string, error)</a></li>
+          <li><a href="#Manager.Load">func (m *Manager) Load(path string) error</a></li>
+          <li><a href="#Manager.MustLoad">func (m *Manager) MustLoad(path string)</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-types">Types</h3>
+  <h3 id="Manager">type Manager</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Manager</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Manager is a thread-safe singleton for reading INI config files.
+<h4 id="GetManager">func GetManager</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">GetManager</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#Manager"><span class="nx">Manager</span></a></pre>
+  <p>GetManager returns the singleton Config Manager.
+<h4 id="Manager.Get">func (*Manager) Get</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#Manager"><span class="nx">Manager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Get</span><span class="p">(</span><span class="nx">section</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <p>Get returns the raw value for section.key. If section is empty, uses DEFAULT section.
+<h4 id="Manager.GetDecrypted">func (*Manager) GetDecrypted</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#Manager"><span class="nx">Manager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetDecrypted</span><span class="p">(</span><span class="nx">section</span><span class="p">,</span><span class="w"> </span><span class="nx">key</span><span class="p">,</span><span class="w"> </span><span class="nx">passphrase</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>GetDecrypted returns the value for section.key, decrypting values with the &quot;ENC:&quot; prefix
+using the provided passphrase. If the value is not prefixed, it is returned as-is.
+<h4 id="Manager.Load">func (*Manager) Load</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#Manager"><span class="nx">Manager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Load</span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Load reads the INI file at path.
+<h4 id="Manager.MustLoad">func (*Manager) MustLoad</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#Manager"><span class="nx">Manager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">MustLoad</span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <p>MustLoad is like Load but panics on error. Useful for tests.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

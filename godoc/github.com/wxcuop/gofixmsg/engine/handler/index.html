@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../../_/icons/favicon.ico"><title>handler</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../../..">github.com</a>/<a href="../../..">wxcuop</a>/<a href="../..">gofixmsg</a>/<a href="..">engine</a>/handler<span class="navbar-right">
+          <a href="../../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package handler</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/engine/handler&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#IsAdminMessageType">func IsAdminMessageType(msgType string) bool</a></li>
+  <li><a href="#NewHeartbeatMessage">func NewHeartbeatMessage(sender, target string) *fixmsg.FixMessage</a></li>
+  <li><a href="#NewLogonMessage">func NewLogonMessage(sender, target string) *fixmsg.FixMessage</a></li>
+  <li><a href="#NewLogoutMessage">func NewLogoutMessage(sender, target string) *fixmsg.FixMessage</a></li>
+  <li><a href="#NewSequenceResetMessage">func NewSequenceResetMessage(sender, target string, newSeq int, gapFill bool) *fixmsg.FixMessage</a></li>
+  <li><a href="#RegisterDefaultHandlers">func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext)</a></li>
+  <li>
+      <a href="#Application">type Application</a>
+      </li>
+  <li>
+      <a href="#EngineI">type EngineI</a>
+      </li>
+  <li>
+      <a href="#HandlerContext">type HandlerContext</a>
+      </li>
+  <li>
+      <a href="#Processor">type Processor</a>
+      <ul>
+          <li><a href="#NewProcessor">func NewProcessor() *Processor</a></li>
+          <li><a href="#Processor.Process">func (p *Processor) Process(m *fixmsg.FixMessage) error</a></li>
+          <li><a href="#Processor.Register">func (p *Processor) Register(msgType string, fn func(*fixmsg.FixMessage) error)</a></li>
+          <li><a href="#Processor.RegisterWithFromApp">func (p *Processor) RegisterWithFromApp(msgType string, sessionID string, fn func(*fixmsg.FixMessage) error)</a></li>
+          <li><a href="#Processor.SetApplication">func (p *Processor) SetApplication(app Application)</a></li>
+          <li><a href="#Processor.SetGetSessionIDFn">func (p *Processor) SetGetSessionIDFn(fn func() string)</a></li>
+          <li><a href="#Processor.SetLogger">func (p *Processor) SetLogger(l *slog.Logger)</a></li>
+          <li><a href="#Processor.SetSpec">func (p *Processor) SetSpec(s *spec.FixSpec)</a></li>
+          <li><a href="#Processor.SetValidateFunc">func (p *Processor) SetValidateFunc(fn func(*fixmsg.FixMessage, *spec.FixSpec) error)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#SeqMgrI">type SeqMgrI</a>
+      </li>
+  </ul><h3 id="pkg-functions">Functions</h3>
+  <h3 id="IsAdminMessageType">func IsAdminMessageType</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">IsAdminMessageType</span><span class="p">(</span><span class="nx">msgType</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
+    <p>IsAdminMessageType checks if a message is an admin message based on MsgType (tag 35).
+<h3 id="NewHeartbeatMessage">func NewHeartbeatMessage</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewHeartbeatMessage</span><span class="p">(</span><span class="nx">sender</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a></pre>
+    <p>NewHeartbeatMessage creates a minimal FIX heartbeat message (MsgType=0).
+<h3 id="NewLogonMessage">func NewLogonMessage</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewLogonMessage</span><span class="p">(</span><span class="nx">sender</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a></pre>
+    <p>Helper to build a minimal FixMessage for outgoing messages
+<h3 id="NewLogoutMessage">func NewLogoutMessage</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewLogoutMessage</span><span class="p">(</span><span class="nx">sender</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a></pre>
+    <h3 id="NewSequenceResetMessage">func NewSequenceResetMessage</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewSequenceResetMessage</span><span class="p">(</span><span class="nx">sender</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">newSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">gapFill</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a></pre>
+    <p>NewSequenceResetMessage creates a SequenceReset message (MsgType=4).
+<h3 id="RegisterDefaultHandlers">func RegisterDefaultHandlers</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">RegisterDefaultHandlers</span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">,</span><span class="w"> </span><span class="nx">ctx</span><span class="w"> </span><span class="o">*</span><a href="#HandlerContext"><span class="nx">HandlerContext</span></a><span class="p">)</span></pre>
+    <p>RegisterDefaultHandlers registers Logon/Logout/Resend/TestRequest and basic admin handlers.
+<h3 id="pkg-types">Types</h3>
+  <h3 id="Application">type Application</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Application</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnCreate"><span class="nf">OnCreate</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnLogon"><span class="nf">OnLogon</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnLogout"><span class="nf">OnLogout</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span id="Application.ToAdmin"><span class="nf">ToAdmin</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="Application.FromAdmin"><span class="nf">FromAdmin</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="Application.ToApp"><span class="nf">ToApp</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="Application.FromApp"><span class="nf">FromApp</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="Application.OnMessage"><span class="nf">OnMessage</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnReject"><span class="nf">OnReject</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">reason</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Application defines callbacks for FIX session lifecycle and message events.
+This is copied here to avoid circular imports between engine and handler packages.
+<h3 id="EngineI">type EngineI</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">EngineI</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="EngineI.SendMessage"><span class="nf">SendMessage</span></span><span class="p">(</span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="EngineI.SessionSend"><span class="nf">SessionSend</span></span><span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="EngineI.GetApp"><span class="nf">GetApp</span></span><span class="p">()</span><span class="w"> </span><a href="#Application"><span class="nx">Application</span></a><span class="w">
+</span><span class="w">	</span><span id="EngineI.GetSessionID"><span class="nf">GetSessionID</span></span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="EngineI.GetSeqMgr"><span class="nf">GetSeqMgr</span></span><span class="p">()</span><span class="w"> </span><a href="#SeqMgrI"><span class="nx">SeqMgrI</span></a><span class="w">
+</span><span class="w">	</span><span id="EngineI.GetLogger"><span class="nf">GetLogger</span></span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/log/slog"><span class="nx">slog</span></a><span class="p">.</span><a href="https://pkg.go.dev/log/slog#Logger"><span class="nx">Logger</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>EngineI defines the interface for engine operations that handlers need.
+This avoids circular dependencies between engine and handler packages.
+<h3 id="HandlerContext">type HandlerContext</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">HandlerContext</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="HandlerContext.SM"><span class="nx">SM</span></span><span class="w">     </span><span class="o">*</span><a href="../../state"><span class="nx">state</span></a><span class="p">.</span><a href="../../state#StateMachine"><span class="nx">StateMachine</span></a><span class="w">
+</span><span class="w">	</span><span id="HandlerContext.Store"><span class="nx">Store</span></span><span class="w">  </span><a href="../../store"><span class="nx">store</span></a><span class="p">.</span><a href="../../store#Store"><span class="nx">Store</span></a><span class="w">
+</span><span class="w">	</span><span id="HandlerContext.Engine"><span class="nx">Engine</span></span><span class="w"> </span><a href="#EngineI"><span class="nx">EngineI</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Handlers have access to engine components via the context struct.
+<h3 id="Processor">type Processor</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Processor</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Processor dispatches by MsgType to registered handlers.
+<h4 id="NewProcessor">func NewProcessor</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewProcessor</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a></pre>
+  <h4 id="Processor.Process">func (*Processor) Process</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Process</span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="Processor.Register">func (*Processor) Register</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Register</span><span class="p">(</span><span class="nx">msgType</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">fn</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="Processor.RegisterWithFromApp">func (*Processor) RegisterWithFromApp</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">RegisterWithFromApp</span><span class="p">(</span><span class="nx">msgType</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">fn</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>RegisterWithFromApp wraps a handler to automatically call FromApp for non-admin messages.
+<h4 id="Processor.SetApplication">func (*Processor) SetApplication</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetApplication</span><span class="p">(</span><span class="nx">app</span><span class="w"> </span><a href="#Application"><span class="nx">Application</span></a><span class="p">)</span></pre>
+  <p>SetApplication sets the application for FromApp callbacks.
+<h4 id="Processor.SetGetSessionIDFn">func (*Processor) SetGetSessionIDFn</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetGetSessionIDFn</span><span class="p">(</span><span class="nx">fn</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <p>SetGetSessionIDFn sets the function to retrieve the current session ID for app callbacks.
+<h4 id="Processor.SetLogger">func (*Processor) SetLogger</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetLogger</span><span class="p">(</span><span class="nx">l</span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/log/slog"><span class="nx">slog</span></a><span class="p">.</span><a href="https://pkg.go.dev/log/slog#Logger"><span class="nx">Logger</span></a><span class="p">)</span></pre>
+  <p>SetLogger sets the logger for the processor.
+<h4 id="Processor.SetSpec">func (*Processor) SetSpec</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetSpec</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg/spec"><span class="nx">spec</span></a><span class="p">.</span><a href="../../fixmsg/spec#FixSpec"><span class="nx">FixSpec</span></a><span class="p">)</span></pre>
+  <p>SetSpec sets the FIX dictionary spec for validation.
+<h4 id="Processor.SetValidateFunc">func (*Processor) SetValidateFunc</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="o">*</span><a href="#Processor"><span class="nx">Processor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetValidateFunc</span><span class="p">(</span><span class="nx">fn</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="o">*</span><a href="../../fixmsg/spec"><span class="nx">spec</span></a><span class="p">.</span><a href="../../fixmsg/spec#FixSpec"><span class="nx">FixSpec</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>SetValidateFunc sets the validation function
+<h3 id="SeqMgrI">type SeqMgrI</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">SeqMgrI</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="SeqMgrI.Incoming"><span class="nf">Incoming</span></span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span id="SeqMgrI.Outgoing"><span class="nf">Outgoing</span></span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span id="SeqMgrI.SetIncoming"><span class="nf">SetIncoming</span></span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="SeqMgrI.SetOutgoing"><span class="nf">SetOutgoing</span></span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span id="SeqMgrI.IncrementIncoming"><span class="nf">IncrementIncoming</span></span><span class="p">()</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span id="SeqMgrI.IncrementOutgoing"><span class="nf">IncrementOutgoing</span></span><span class="p">()</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>SeqMgrI defines the interface for sequence manager.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../../_/js/permalink.js"></script></body>
+</html>

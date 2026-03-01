@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>fixmsg</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/fixmsg<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package fixmsg</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/fixmsg&#34;</span></pre>
+<p>Package fixmsg provides FIX protocol message representation.
+<p>The core types are <a href="#FixMessage">FixMessage</a> (a top-level FIX message), <a href="#FixFragment">FixFragment</a>
+(a tag→value map used for both messages and repeating-group members), and
+<a href="#RepeatingGroup">RepeatingGroup</a> (an ordered list of [FixFragment]s for group fields).
+<p>Wire-format parsing and serialisation is handled by the <a href="https://pkg.go.dev/fixmsg/codec">fixmsg/codec</a>
+sub-package; QuickFIX XML specification loading by <a href="https://pkg.go.dev/fixmsg/spec">fixmsg/spec</a>.
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#pkg-constants">Constants</a></li><li><a href="#pkg-variables">Variables</a></li><li>
+      <a href="#Codec">type Codec</a>
+      </li>
+  <li>
+      <a href="#FixFragment">type FixFragment</a>
+      <ul>
+          <li><a href="#FixFragment.AllTags">func (f FixFragment) AllTags() []int</a></li>
+          <li><a href="#FixFragment.AllTagsDeep">func (f FixFragment) AllTagsDeep() []int</a></li>
+          <li><a href="#FixFragment.Anywhere">func (f FixFragment) Anywhere(tag int) bool</a></li>
+          <li><a href="#FixFragment.Contains">func (f FixFragment) Contains(tag int) bool</a></li>
+          <li><a href="#FixFragment.FindAll">func (f FixFragment) FindAll(tag int) [][]any</a></li>
+          <li><a href="#FixFragment.Get">func (f FixFragment) Get(tag int) (string, bool)</a></li>
+          <li><a href="#FixFragment.GetGroup">func (f FixFragment) GetGroup(tag int) (*RepeatingGroup, bool)</a></li>
+          <li><a href="#FixFragment.MustGet">func (f FixFragment) MustGet(tag int) string</a></li>
+          <li><a href="#FixFragment.Set">func (f FixFragment) Set(tag int, value string)</a></li>
+          <li><a href="#FixFragment.SetGroup">func (f FixFragment) SetGroup(tag int, group *RepeatingGroup)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#FixMessage">type FixMessage</a>
+      <ul>
+          <li><a href="#NewFixMessage">func NewFixMessage() *FixMessage</a></li>
+          <li><a href="#NewFixMessageFromMap">func NewFixMessageFromMap(fields map[int]string) *FixMessage</a></li>
+          <li><a href="#FixMessage.Checksum">func (m *FixMessage) Checksum() string</a></li>
+          <li><a href="#FixMessage.Length">func (m *FixMessage) Length() int</a></li>
+          <li><a href="#FixMessage.LoadFix">func (m *FixMessage) LoadFix(buf []byte) error</a></li>
+          <li><a href="#FixMessage.SetLenAndChecksum">func (m *FixMessage) SetLenAndChecksum()</a></li>
+          <li><a href="#FixMessage.SetOrDelete">func (m *FixMessage) SetOrDelete(tag int, value string)</a></li>
+          <li><a href="#FixMessage.TagContains">func (m *FixMessage) TagContains(tag int, value string, caseInsensitive bool) bool</a></li>
+          <li><a href="#FixMessage.TagExact">func (m *FixMessage) TagExact(tag int, value string, caseInsensitive bool) bool</a></li>
+          <li><a href="#FixMessage.ToWire">func (m *FixMessage) ToWire() ([]byte, error)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#RepeatingGroup">type RepeatingGroup</a>
+      <ul>
+          <li><a href="#NewRepeatingGroup">func NewRepeatingGroup(numberTag int) *RepeatingGroup</a></li>
+          <li><a href="#RepeatingGroup.Add">func (g *RepeatingGroup) Add() FixFragment</a></li>
+          <li><a href="#RepeatingGroup.At">func (g *RepeatingGroup) At(i int) FixFragment</a></li>
+          <li><a href="#RepeatingGroup.FindAll">func (g *RepeatingGroup) FindAll(tag int) [][]any</a></li>
+          <li><a href="#RepeatingGroup.Len">func (g *RepeatingGroup) Len() int</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-constants">Constants</h3>
+  <pre class="chroma"><span class="kd">const</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span><span class="w">	</span><span id="TagBeginString"><span class="nx">TagBeginString</span></span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="mi">8</span><span class="w">
+</span><span class="w">	</span><span id="TagBodyLength"><span class="nx">TagBodyLength</span></span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="mi">9</span><span class="w">
+</span><span class="w">	</span><span id="TagMsgType"><span class="nx">TagMsgType</span></span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="mi">35</span><span class="w">
+</span><span class="w">	</span><span id="TagSenderCompID"><span class="nx">TagSenderCompID</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">49</span><span class="w">
+</span><span class="w">	</span><span id="TagTargetCompID"><span class="nx">TagTargetCompID</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">56</span><span class="w">
+</span><span class="w">	</span><span id="TagOnBehalfOf"><span class="nx">TagOnBehalfOf</span></span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="mi">115</span><span class="w">
+</span><span class="w">	</span><span id="TagDeliverTo"><span class="nx">TagDeliverTo</span></span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="mi">128</span><span class="w">
+</span><span class="w">	</span><span id="TagMsgSeqNum"><span class="nx">TagMsgSeqNum</span></span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="mi">34</span><span class="w">
+</span><span class="w">	</span><span id="TagSendingTime"><span class="nx">TagSendingTime</span></span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="mi">52</span><span class="w">
+</span><span class="w">	</span><span id="TagPossDupFlag"><span class="nx">TagPossDupFlag</span></span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="mi">43</span><span class="w">
+</span><span class="w">	</span><span id="TagOrigSendTime"><span class="nx">TagOrigSendTime</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">122</span><span class="w">
+</span><span class="w">	</span><span id="TagCheckSum"><span class="nx">TagCheckSum</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="mi">10</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Session-level tags</span><span class="w">
+</span><span class="w">	</span><span id="TagHeartBtInt"><span class="nx">TagHeartBtInt</span></span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="mi">108</span><span class="w">
+</span><span class="w">	</span><span id="TagTestReqID"><span class="nx">TagTestReqID</span></span><span class="w">           </span><span class="p">=</span><span class="w"> </span><span class="mi">112</span><span class="w">
+</span><span class="w">	</span><span id="TagEncryptMethod"><span class="nx">TagEncryptMethod</span></span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="mi">98</span><span class="w">
+</span><span class="w">	</span><span id="TagResetSeqNumFlag"><span class="nx">TagResetSeqNumFlag</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="mi">141</span><span class="w">
+</span><span class="w">	</span><span id="TagText"><span class="nx">TagText</span></span><span class="w">                </span><span class="p">=</span><span class="w"> </span><span class="mi">58</span><span class="w">
+</span><span class="w">	</span><span id="TagRefSeqNum"><span class="nx">TagRefSeqNum</span></span><span class="w">           </span><span class="p">=</span><span class="w"> </span><span class="mi">45</span><span class="w">
+</span><span class="w">	</span><span id="TagRefMsgType"><span class="nx">TagRefMsgType</span></span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="mi">372</span><span class="w">
+</span><span class="w">	</span><span id="TagSessionRejectReason"><span class="nx">TagSessionRejectReason</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">373</span><span class="w">
+</span><span class="w">	</span><span id="TagNewSeqNo"><span class="nx">TagNewSeqNo</span></span><span class="w">            </span><span class="p">=</span><span class="w"> </span><span class="mi">36</span><span class="w">
+</span><span class="w">	</span><span id="TagGapFillFlag"><span class="nx">TagGapFillFlag</span></span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="mi">123</span><span class="w">
+</span><span class="w">	</span><span id="TagBeginSeqNo"><span class="nx">TagBeginSeqNo</span></span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="mi">7</span><span class="w">
+</span><span class="w">	</span><span id="TagEndSeqNo"><span class="nx">TagEndSeqNo</span></span><span class="w">            </span><span class="p">=</span><span class="w"> </span><span class="mi">16</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Common application tags</span><span class="w">
+</span><span class="w">	</span><span id="TagClOrdID"><span class="nx">TagClOrdID</span></span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="mi">11</span><span class="w">
+</span><span class="w">	</span><span id="TagSymbol"><span class="nx">TagSymbol</span></span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="mi">55</span><span class="w">
+</span><span class="w">	</span><span id="TagSide"><span class="nx">TagSide</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="mi">54</span><span class="w">
+</span><span class="w">	</span><span id="TagOrdType"><span class="nx">TagOrdType</span></span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="mi">40</span><span class="w">
+</span><span class="w">	</span><span id="TagOrderQty"><span class="nx">TagOrderQty</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="mi">38</span><span class="w">
+</span><span class="w">	</span><span id="TagPrice"><span class="nx">TagPrice</span></span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="mi">44</span><span class="w">
+</span><span class="w"></span><span class="p">)</span></pre>
+  <p>Well-known FIX tag numbers referenced throughout the engine.
+<h3 id="pkg-variables">Variables</h3>
+  <pre class="chroma"><span class="kd">var</span><span class="w"> </span><span id="HeaderSortMap"><span class="nx">HeaderSortMap</span></span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <p>HeaderSortMap maps each header tag to its sort priority (lower = earlier).
+<pre class="chroma"><span class="kd">var</span><span class="w"> </span><span id="HeaderTags"><span class="nx">HeaderTags</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="mi">9</span><span class="p">,</span><span class="w"> </span><span class="mi">35</span><span class="p">,</span><span class="w"> </span><span class="mi">1128</span><span class="p">,</span><span class="w"> </span><span class="mi">1156</span><span class="p">,</span><span class="w"> </span><span class="mi">1129</span><span class="p">,</span><span class="w"> </span><span class="mi">49</span><span class="p">,</span><span class="w"> </span><span class="mi">56</span><span class="p">,</span><span class="w"> </span><span class="mi">115</span><span class="p">,</span><span class="w"> </span><span class="mi">128</span><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="mi">90</span><span class="p">,</span><span class="w"> </span><span class="mi">91</span><span class="p">,</span><span class="w"> </span><span class="mi">34</span><span class="p">,</span><span class="w"> </span><span class="mi">50</span><span class="p">,</span><span class="w"> </span><span class="mi">142</span><span class="p">,</span><span class="w"> </span><span class="mi">57</span><span class="p">,</span><span class="w"> </span><span class="mi">143</span><span class="p">,</span><span class="w"> </span><span class="mi">116</span><span class="p">,</span><span class="w"> </span><span class="mi">144</span><span class="p">,</span><span class="w"> </span><span class="mi">129</span><span class="p">,</span><span class="w"> </span><span class="mi">145</span><span class="p">,</span><span class="w">
+</span><span class="w">	</span><span class="mi">43</span><span class="p">,</span><span class="w"> </span><span class="mi">97</span><span class="p">,</span><span class="w"> </span><span class="mi">52</span><span class="p">,</span><span class="w"> </span><span class="mi">122</span><span class="p">,</span><span class="w"> </span><span class="mi">212</span><span class="p">,</span><span class="w"> </span><span class="mi">213</span><span class="p">,</span><span class="w"> </span><span class="mi">347</span><span class="p">,</span><span class="w"> </span><span class="mi">369</span><span class="p">,</span><span class="w"> </span><span class="mi">370</span><span class="p">,</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+  <p>HeaderTags is the canonical ordering of FIX header tags.
+Tags present in a message are written in this order before the body.
+Mirrors pyfixmsg/reference.py HEADER_TAGS.
+<pre class="chroma"><span class="kd">var</span><span class="w"> </span><span id="TrailerTags"><span class="nx">TrailerTags</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">{</span><span class="mi">93</span><span class="p">,</span><span class="w"> </span><span class="mi">89</span><span class="p">,</span><span class="w"> </span><span class="mi">10</span><span class="p">}</span></pre>
+  <p>TrailerTags is the canonical ordering of FIX trailer tags.
+93 (SignatureLength) and 89 (Signature) precede 10 (CheckSum).
+<h3 id="pkg-types">Types</h3>
+  <h3 id="Codec">type Codec</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Codec</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Serialise converts msg to its FIX wire-format bytes.</span><span class="w">
+</span><span class="w">	</span><span class="c1">// The caller should call [FixMessage.SetLenAndChecksum] first.</span><span class="w">
+</span><span class="w">	</span><span id="Codec.Serialise"><span class="nf">Serialise</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Parse creates a new FixMessage from FIX wire-format bytes.</span><span class="w">
+</span><span class="w">	</span><span id="Codec.Parse"><span class="nf">Parse</span></span><span class="p">(</span><span class="nx">buf</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Codec is the interface that bridges <a href="#FixMessage">FixMessage</a> to its wire-format
+implementation in <a href="https://pkg.go.dev/fixmsg/codec">fixmsg/codec</a>. Defining it here lets codec import fixmsg
+without creating a circular dependency.
+<h3 id="FixFragment">type FixFragment</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">FixFragment</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><a href="https://pkg.go.dev/builtin#any"><span class="kt">any</span></a></pre>
+    <p>FixFragment is the base tag→value map for FIX protocol fields.
+<p>Keys are integer FIX tag numbers. Values are either string (for scalar
+fields) or *<a href="#RepeatingGroup">RepeatingGroup</a> (for repeating-group delimiter tags).
+<p>FixFragment is a named map type so it can carry methods while remaining
+directly usable as a map (range, len, delete all work as normal).
+<h4 id="FixFragment.AllTags">func (FixFragment) AllTags</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">AllTags</span><span class="p">()</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <p>AllTags returns every tag number present directly in this fragment.
+Does not recurse into nested groups.
+<h4 id="FixFragment.AllTagsDeep">func (FixFragment) AllTagsDeep</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">AllTagsDeep</span><span class="p">()</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <p>AllTagsDeep returns every tag number in this fragment and any nested groups.
+Each tag appears at most once.
+<h4 id="FixFragment.Anywhere">func (FixFragment) Anywhere</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Anywhere</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
+  <p>Anywhere reports whether tag is present in this fragment or any nested group.
+<h4 id="FixFragment.Contains">func (FixFragment) Contains</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Contains</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
+  <p>Contains reports whether tag is present (string or group).
+<h4 id="FixFragment.FindAll">func (FixFragment) FindAll</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">FindAll</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="p">[][]</span><a href="https://pkg.go.dev/builtin#any"><span class="kt">any</span></a></pre>
+  <p>FindAll returns all paths to tag within this fragment and any nested groups.
+Each path is a []any where each element is an int (tag or group member index).
+Mirrors Python FixFragment.find_all semantics.
+<h4 id="FixFragment.Get">func (FixFragment) Get</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Get</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <p>Get returns the string value stored under tag.
+Returns (&quot;&quot;, false) if the tag is absent or holds a *RepeatingGroup.
+<h4 id="FixFragment.GetGroup">func (FixFragment) GetGroup</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetGroup</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#RepeatingGroup"><span class="nx">RepeatingGroup</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <p>GetGroup returns the *RepeatingGroup stored under tag.
+Returns (nil, false) if the tag is absent or holds a string.
+<h4 id="FixFragment.MustGet">func (FixFragment) MustGet</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">MustGet</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <p>MustGet returns the string value for tag.
+Panics if the tag is absent or holds a *RepeatingGroup.
+<h4 id="FixFragment.Set">func (FixFragment) Set</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Set</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <p>Set stores value as the string value for tag.
+<h4 id="FixFragment.SetGroup">func (FixFragment) SetGroup</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetGroup</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">group</span><span class="w"> </span><span class="o">*</span><a href="#RepeatingGroup"><span class="nx">RepeatingGroup</span></a><span class="p">)</span></pre>
+  <p>SetGroup stores group under tag.
+<h3 id="FixMessage">type FixMessage</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">FixMessage</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Codec handles serialise/parse; nil uses the built-in default.</span><span class="w">
+</span><span class="w">	</span><span id="FixMessage.Codec"><span class="nx">Codec</span></span><span class="w"> </span><a href="#Codec"><span class="nx">Codec</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Time is when the message was created or received. Defaults to UTC now.</span><span class="w">
+</span><span class="w">	</span><span id="FixMessage.Time"><span class="nx">Time</span></span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Time"><span class="nx">Time</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// Direction: 0=inbound, 1=outbound, -1=unknown.</span><span class="w">
+</span><span class="w">	</span><span id="FixMessage.Direction"><span class="nx">Direction</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// RawMessage holds the original wire bytes when parsed via LoadFix.</span><span class="w">
+</span><span class="w">	</span><span id="FixMessage.RawMessage"><span class="nx">RawMessage</span></span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>FixMessage is the top-level FIX message type.
+<p>It embeds <a href="#FixFragment">FixFragment</a> for tag storage and carries a <a href="#Codec">Codec</a> reference for
+wire-format operations. When Codec is nil a simple built-in serialiser is
+used that does not support repeating groups.
+<h4 id="NewFixMessage">func NewFixMessage</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewFixMessage</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a></pre>
+  <p>NewFixMessage returns an empty FixMessage with Time set to now (UTC).
+<h4 id="NewFixMessageFromMap">func NewFixMessageFromMap</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewFixMessageFromMap</span><span class="p">(</span><span class="nx">fields</span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a></pre>
+  <p>NewFixMessageFromMap returns a FixMessage pre-populated from fields.
+<h4 id="FixMessage.Checksum">func (*FixMessage) Checksum</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Checksum</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <p>Checksum returns the three-digit checksum string (tag 10).
+Calls SetLenAndChecksum if tag 10 is not already set.
+<h4 id="FixMessage.Length">func (*FixMessage) Length</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Length</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <p>Length returns the body byte count (tag 9). Calls SetLenAndChecksum if needed.
+<h4 id="FixMessage.LoadFix">func (*FixMessage) LoadFix</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">LoadFix</span><span class="p">(</span><span class="nx">buf</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>LoadFix parses buf into m, replacing any existing tags.
+Uses m.Codec when set, otherwise the built-in default (no repeating groups).
+<h4 id="FixMessage.SetLenAndChecksum">func (*FixMessage) SetLenAndChecksum</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetLenAndChecksum</span><span class="p">()</span></pre>
+  <p>SetLenAndChecksum computes BodyLength (tag 9) and CheckSum (tag 10) and
+stores them in the message. It must be called before ToWire.
+<p>Algorithm (FIX standard):
+<ol>
+<li>Build body bytes = all fields except tags 8, 9, 10 in canonical order.
+<li>BodyLength  = len(body bytes).
+<li>prefix      = &quot;8=&lt;BeginString&gt;\x019=&lt;BodyLength&gt;\x01&quot;
+<li>CheckSum    = (sum of all bytes in prefix + body) mod 256, zero-padded to 3 digits.
+</ol>
+<h4 id="FixMessage.SetOrDelete">func (*FixMessage) SetOrDelete</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetOrDelete</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <p>SetOrDelete sets tag to value, or removes the tag if value is empty.
+<h4 id="FixMessage.TagContains">func (*FixMessage) TagContains</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">TagContains</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">caseInsensitive</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
+  <p>TagContains returns true if the string value of tag contains value.
+<h4 id="FixMessage.TagExact">func (*FixMessage) TagExact</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">TagExact</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">caseInsensitive</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a></pre>
+  <p>TagExact returns true if the string value of tag equals value.
+<h4 id="FixMessage.ToWire">func (*FixMessage) ToWire</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="nf">ToWire</span><span class="p">()</span><span class="w"> </span><span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>ToWire serialises the message to FIX wire-format bytes.
+SetLenAndChecksum is called internally before serialisation.
+<h3 id="RepeatingGroup">type RepeatingGroup</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">RepeatingGroup</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// NumberTag is the FIX count tag that owns this group (e.g. 78 = NoAllocs).</span><span class="w">
+</span><span class="w">	</span><span id="RepeatingGroup.NumberTag"><span class="nx">NumberTag</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// FirstTag is the delimiter tag that begins each new group member.</span><span class="w">
+</span><span class="w">	</span><span id="RepeatingGroup.FirstTag"><span class="nx">FirstTag</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// Members holds the individual group entries in order.</span><span class="w">
+</span><span class="w">	</span><span id="RepeatingGroup.Members"><span class="nx">Members</span></span><span class="w"> </span><span class="p">[]</span><a href="#FixFragment"><span class="nx">FixFragment</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>RepeatingGroup is an ordered list of <a href="#FixFragment">FixFragment</a> members representing a
+FIX repeating group (e.g. NoLegs, NoPartyIDs).
+<p>A *RepeatingGroup is stored inside its parent <a href="#FixFragment">FixFragment</a> under the count
+tag (e.g. tag 78 = NoAllocs). During serialisation the count tag&apos;s value is
+written as len(Members), followed by each member&apos;s fields.
+<h4 id="NewRepeatingGroup">func NewRepeatingGroup</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewRepeatingGroup</span><span class="p">(</span><span class="nx">numberTag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#RepeatingGroup"><span class="nx">RepeatingGroup</span></a></pre>
+  <p>NewRepeatingGroup creates a RepeatingGroup with the given count tag.
+<h4 id="RepeatingGroup.Add">func (*RepeatingGroup) Add</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#RepeatingGroup"><span class="nx">RepeatingGroup</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Add</span><span class="p">()</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a></pre>
+  <p>Add appends an empty FixFragment to the group and returns it for population.
+<pre>member := group.Add()
+member.Set(79, &quot;AccountA&quot;)
+member.Set(80, &quot;100&quot;)
+</pre>
+<h4 id="RepeatingGroup.At">func (*RepeatingGroup) At</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#RepeatingGroup"><span class="nx">RepeatingGroup</span></a><span class="p">)</span><span class="w"> </span><span class="nf">At</span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="#FixFragment"><span class="nx">FixFragment</span></a></pre>
+  <p>At returns the member fragment at index i.
+<h4 id="RepeatingGroup.FindAll">func (*RepeatingGroup) FindAll</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#RepeatingGroup"><span class="nx">RepeatingGroup</span></a><span class="p">)</span><span class="w"> </span><span class="nf">FindAll</span><span class="p">(</span><span class="nx">tag</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="p">[][]</span><a href="https://pkg.go.dev/builtin#any"><span class="kt">any</span></a></pre>
+  <p>FindAll returns all paths to tag across all group members.
+See <a href="#FixFragment.FindAll">FixFragment.FindAll</a> for path format.
+<h4 id="RepeatingGroup.Len">func (*RepeatingGroup) Len</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#RepeatingGroup"><span class="nx">RepeatingGroup</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Len</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <p>Len returns the number of group members.
+<h3 id="pkg-directories">Directories</h3>
+
+<table>
+  <tbody>
+    <tr>
+        <td><a href="codec">codec</a></td>
+        <td>Package codec implements the FIX wire-format codec.</td>
+      </tr>
+    <tr>
+        <td><a href="spec">spec</a></td>
+        <td>Package spec loads QuickFIX XML specification files.</td>
+      </tr>
+    </tbody>
+</table>
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

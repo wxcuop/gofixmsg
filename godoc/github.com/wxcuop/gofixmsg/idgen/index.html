@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>idgen</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/idgen<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package idgen</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/idgen&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li>
+      <a href="#ClOrdIDGenerator">type ClOrdIDGenerator</a>
+      </li>
+  <li>
+      <a href="#NumericGenerator">type NumericGenerator</a>
+      <ul>
+          <li><a href="#NewNumericGenerator">func NewNumericGenerator() *NumericGenerator</a></li>
+          <li><a href="#NumericGenerator.Decode">func (g *NumericGenerator) Decode(s string) (int, error)</a></li>
+          <li><a href="#NumericGenerator.Encode">func (g *NumericGenerator) Encode(n int) string</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#YMDGenerator">type YMDGenerator</a>
+      <ul>
+          <li><a href="#NewYMDGenerator">func NewYMDGenerator(now func() time.Time) *YMDGenerator</a></li>
+          <li><a href="#YMDGenerator.Decode">func (g *YMDGenerator) Decode(s string) (int, error)</a></li>
+          <li><a href="#YMDGenerator.Encode">func (g *YMDGenerator) Encode(n int) string</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-types">Types</h3>
+  <h3 id="ClOrdIDGenerator">type ClOrdIDGenerator</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">ClOrdIDGenerator</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="ClOrdIDGenerator.Encode"><span class="nf">Encode</span></span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="ClOrdIDGenerator.Decode"><span class="nf">Decode</span></span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>ClOrdIDGenerator encodes and decodes sequence numbers to/from client order IDs.
+Encode must be reversible by Decode.
+<h3 id="NumericGenerator">type NumericGenerator</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">NumericGenerator</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span></pre>
+    <p>NumericGenerator is a simple numeric encoder/decoder.
+<h4 id="NewNumericGenerator">func NewNumericGenerator</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewNumericGenerator</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#NumericGenerator"><span class="nx">NumericGenerator</span></a></pre>
+  <h4 id="NumericGenerator.Decode">func (*NumericGenerator) Decode</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#NumericGenerator"><span class="nx">NumericGenerator</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Decode</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="NumericGenerator.Encode">func (*NumericGenerator) Encode</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#NumericGenerator"><span class="nx">NumericGenerator</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Encode</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <h3 id="YMDGenerator">type YMDGenerator</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">YMDGenerator</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="YMDGenerator.Now"><span class="nx">Now</span></span><span class="w">   </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Time"><span class="nx">Time</span></a><span class="w"> </span><span class="c1">// inject for tests; nil defaults to time.Now</span><span class="w">
+</span><span class="w">	</span><span id="YMDGenerator.Width"><span class="nx">Width</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">              </span><span class="c1">// number of digits for the sequence (default 6)</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>YMDGenerator prefixes the ID with the current date in YYYYMMDD and a zero-padded sequence.
+Example: 20260228000042
+<h4 id="NewYMDGenerator">func NewYMDGenerator</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewYMDGenerator</span><span class="p">(</span><span class="nx">now</span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Time"><span class="nx">Time</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#YMDGenerator"><span class="nx">YMDGenerator</span></a></pre>
+  <h4 id="YMDGenerator.Decode">func (*YMDGenerator) Decode</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#YMDGenerator"><span class="nx">YMDGenerator</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Decode</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="YMDGenerator.Encode">func (*YMDGenerator) Encode</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">g</span><span class="w"> </span><span class="o">*</span><a href="#YMDGenerator"><span class="nx">YMDGenerator</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Encode</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  </main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

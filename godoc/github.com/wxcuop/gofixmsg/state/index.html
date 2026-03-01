@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>state</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/state<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package state</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/state&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#pkg-constants">Constants</a></li><li>
+      <a href="#StateMachine">type StateMachine</a>
+      <ul>
+          <li><a href="#NewStateMachine">func NewStateMachine() *StateMachine</a></li>
+          <li><a href="#StateMachine.OnEvent">func (s *StateMachine) OnEvent(event string) (string, error)</a></li>
+          <li><a href="#StateMachine.Register">func (s *StateMachine) Register(cb func(string))</a></li>
+          <li><a href="#StateMachine.SetLogger">func (s *StateMachine) SetLogger(logger *slog.Logger)</a></li>
+          <li><a href="#StateMachine.State">func (s *StateMachine) State() string</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-constants">Constants</h3>
+  <pre class="chroma"><span class="kd">const</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span><span class="w">	</span><span id="StateDisconnected"><span class="nx">StateDisconnected</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;Disconnected&#34;</span><span class="w">
+</span><span class="w">	</span><span id="StateConnecting"><span class="nx">StateConnecting</span></span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;Connecting&#34;</span><span class="w">
+</span><span class="w">	</span><span id="StateLogonInProgress"><span class="nx">StateLogonInProgress</span></span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;LogonInProgress&#34;</span><span class="w">
+</span><span class="w">	</span><span id="StateAwaitingLogon"><span class="nx">StateAwaitingLogon</span></span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;AwaitingLogon&#34;</span><span class="w">
+</span><span class="w">	</span><span id="StateActive"><span class="nx">StateActive</span></span><span class="w">           </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;Active&#34;</span><span class="w">
+</span><span class="w">	</span><span id="StateLogoutInProgress"><span class="nx">StateLogoutInProgress</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;LogoutInProgress&#34;</span><span class="w">
+</span><span class="w">	</span><span id="StateReconnecting"><span class="nx">StateReconnecting</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;Reconnecting&#34;</span><span class="w">
+</span><span class="w"></span><span class="p">)</span></pre>
+  <p>Predefined state names
+<pre class="chroma"><span class="kd">const</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span><span class="w">	</span><span id="EventConnect"><span class="nx">EventConnect</span></span><span class="w">            </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;connect&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventConnected"><span class="nx">EventConnected</span></span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;connected&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventClientAccepted"><span class="nx">EventClientAccepted</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;client_accepted&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventLogonSent"><span class="nx">EventLogonSent</span></span><span class="w">          </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;logon_sent&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventLogonReceived"><span class="nx">EventLogonReceived</span></span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;logon_received&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventLogonFailed"><span class="nx">EventLogonFailed</span></span><span class="w">        </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;logon_failed&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventLogout"><span class="nx">EventLogout</span></span><span class="w">             </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;logout&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventLogoutComplete"><span class="nx">EventLogoutComplete</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;logout_complete&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventLogoutReceived"><span class="nx">EventLogoutReceived</span></span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;logout_received&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventDisconnect"><span class="nx">EventDisconnect</span></span><span class="w">         </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;disconnect&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventDisconnected"><span class="nx">EventDisconnected</span></span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;disconnected&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventInitiateReconnect"><span class="nx">EventInitiateReconnect</span></span><span class="w">  </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;initiate_reconnect&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventReconnectFailedMax"><span class="nx">EventReconnectFailedMax</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;reconnect_failed_max_retries&#34;</span><span class="w">
+</span><span class="w">	</span><span id="EventGiveup"><span class="nx">EventGiveup</span></span><span class="w">             </span><span class="p">=</span><span class="w"> </span><span class="s">&#34;giveup&#34;</span><span class="w">
+</span><span class="w"></span><span class="p">)</span></pre>
+  <p>Predefined events
+<h3 id="pkg-types">Types</h3>
+  <h3 id="StateMachine">type StateMachine</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">StateMachine</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>StateMachine manages session state transitions.
+<h4 id="NewStateMachine">func NewStateMachine</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewStateMachine</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#StateMachine"><span class="nx">StateMachine</span></a></pre>
+  <p>NewStateMachine returns a StateMachine starting in Disconnected.
+<h4 id="StateMachine.OnEvent">func (*StateMachine) OnEvent</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#StateMachine"><span class="nx">StateMachine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">OnEvent</span><span class="p">(</span><span class="nx">event</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>OnEvent applies an event string and returns the new state or error if undefined.
+Returns error if no transition is defined for the current state+event combination.
+<h4 id="StateMachine.Register">func (*StateMachine) Register</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#StateMachine"><span class="nx">StateMachine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Register</span><span class="p">(</span><span class="nx">cb</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">))</span></pre>
+  <p>Register adds a subscriber callback that is invoked whenever the state changes.
+<h4 id="StateMachine.SetLogger">func (*StateMachine) SetLogger</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#StateMachine"><span class="nx">StateMachine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetLogger</span><span class="p">(</span><span class="nx">logger</span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/log/slog"><span class="nx">slog</span></a><span class="p">.</span><a href="https://pkg.go.dev/log/slog#Logger"><span class="nx">Logger</span></a><span class="p">)</span></pre>
+  <p>SetLogger sets the logger for state transitions.
+<h4 id="StateMachine.State">func (*StateMachine) State</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#StateMachine"><span class="nx">StateMachine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">State</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <p>State returns the current state.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

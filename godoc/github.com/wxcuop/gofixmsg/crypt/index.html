@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>crypt</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/crypt<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package crypt</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/crypt&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#DecryptString">func DecryptString(encoded, passphrase string) (string, error)</a></li>
+  <li><a href="#EncryptString">func EncryptString(plain, passphrase string) (string, error)</a></li>
+  </ul><h3 id="pkg-functions">Functions</h3>
+  <h3 id="DecryptString">func DecryptString</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">DecryptString</span><span class="p">(</span><span class="nx">encoded</span><span class="p">,</span><span class="w"> </span><span class="nx">passphrase</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+    <p>DecryptString expects base64(salt|nonce|ciphertext) and returns plaintext.
+<h3 id="EncryptString">func EncryptString</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">EncryptString</span><span class="p">(</span><span class="nx">plain</span><span class="p">,</span><span class="w"> </span><span class="nx">passphrase</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+    <p>EncryptString derives a key from passphrase and returns base64(salt|nonce|ciphertext).
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

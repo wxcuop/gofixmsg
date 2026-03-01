@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>engine</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/engine<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package engine</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/engine&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#NewDefaultStateMachine">func NewDefaultStateMachine(sessionID string) *state.StateMachine</a></li>
+  <li><a href="#NewDefaultStore">func NewDefaultStore(sessionID string) store.Store</a></li>
+  <li><a href="#ValidateMessage">func ValidateMessage(m *fixmsg.FixMessage, s *spec.FixSpec) error</a></li>
+  <li>
+      <a href="#Application">type Application</a>
+      </li>
+  <li>
+      <a href="#FixEngine">type FixEngine</a>
+      <ul>
+          <li><a href="#NewFixEngine">func NewFixEngine(init *network.Initiator) *FixEngine</a></li>
+          <li><a href="#FixEngine.AttachSession">func (e *FixEngine) AttachSession(s *session.Session) error</a></li>
+          <li><a href="#FixEngine.Close">func (e *FixEngine) Close() error</a></li>
+          <li><a href="#FixEngine.Connect">func (e *FixEngine) Connect() error</a></li>
+          <li><a href="#FixEngine.DetachSession">func (e *FixEngine) DetachSession()</a></li>
+          <li><a href="#FixEngine.GetApp">func (e *FixEngine) GetApp() handler.Application</a></li>
+          <li><a href="#FixEngine.GetLogger">func (e *FixEngine) GetLogger() *slog.Logger</a></li>
+          <li><a href="#FixEngine.GetSeqMgr">func (e *FixEngine) GetSeqMgr() handler.SeqMgrI</a></li>
+          <li><a href="#FixEngine.GetSessionID">func (e *FixEngine) GetSessionID() string</a></li>
+          <li><a href="#FixEngine.HandleIncoming">func (e *FixEngine) HandleIncoming(m *fixmsg.FixMessage) error</a></li>
+          <li><a href="#FixEngine.SendMessage">func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error</a></li>
+          <li><a href="#FixEngine.SessionSend">func (e *FixEngine) SessionSend(b []byte) error</a></li>
+          <li><a href="#FixEngine.SetApplication">func (e *FixEngine) SetApplication(app Application)</a></li>
+          <li><a href="#FixEngine.SetReconnectParams">func (e *FixEngine) SetReconnectParams(initial, max time.Duration, enable bool)</a></li>
+          <li><a href="#FixEngine.SetSessionID">func (e *FixEngine) SetSessionID(sid string)</a></li>
+          <li><a href="#FixEngine.SetupComponents">func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store)</a></li>
+          <li><a href="#FixEngine.StartScheduler">func (e *FixEngine) StartScheduler()</a></li>
+          <li><a href="#FixEngine.StopScheduler">func (e *FixEngine) StopScheduler()</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#HeartbeatMonitor">type HeartbeatMonitor</a>
+      <ul>
+          <li><a href="#NewHeartbeatMonitor">func NewHeartbeatMonitor(e *FixEngine, interval, testReqTimeout time.Duration) *HeartbeatMonitor</a></li>
+          <li><a href="#HeartbeatMonitor.Seen">func (h *HeartbeatMonitor) Seen()</a></li>
+          <li><a href="#HeartbeatMonitor.Start">func (h *HeartbeatMonitor) Start(ctx context.Context)</a></li>
+          <li><a href="#HeartbeatMonitor.Stop">func (h *HeartbeatMonitor) Stop()</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#MultiSessionEngine">type MultiSessionEngine</a>
+      <ul>
+          <li><a href="#NewMultiSessionEngine">func NewMultiSessionEngine(addr string) *MultiSessionEngine</a></li>
+          <li><a href="#MultiSessionEngine.BroadcastMessage">func (m *MultiSessionEngine) BroadcastMessage(msg *fixmsg.FixMessage) error</a></li>
+          <li><a href="#MultiSessionEngine.GetSession">func (m *MultiSessionEngine) GetSession(sessionID string) (*FixEngine, bool)</a></li>
+          <li><a href="#MultiSessionEngine.SessionCount">func (m *MultiSessionEngine) SessionCount() int</a></li>
+          <li><a href="#MultiSessionEngine.SessionIDs">func (m *MultiSessionEngine) SessionIDs() []string</a></li>
+          <li><a href="#MultiSessionEngine.SetApplication">func (m *MultiSessionEngine) SetApplication(app Application)</a></li>
+          <li><a href="#MultiSessionEngine.SetStateMachineFactory">func (m *MultiSessionEngine) SetStateMachineFactory(factory func(string) *state.StateMachine)</a></li>
+          <li><a href="#MultiSessionEngine.SetStoreFactory">func (m *MultiSessionEngine) SetStoreFactory(factory func(string) store.Store)</a></li>
+          <li><a href="#MultiSessionEngine.Start">func (m *MultiSessionEngine) Start() error</a></li>
+          <li><a href="#MultiSessionEngine.Stop">func (m *MultiSessionEngine) Stop() error</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#NoOpApplication">type NoOpApplication</a>
+      <ul>
+          <li><a href="#NoOpApplication.FromAdmin">func (n *NoOpApplication) FromAdmin(msg *fixmsg.FixMessage, sessionID string) error</a></li>
+          <li><a href="#NoOpApplication.FromApp">func (n *NoOpApplication) FromApp(msg *fixmsg.FixMessage, sessionID string) error</a></li>
+          <li><a href="#NoOpApplication.OnCreate">func (n *NoOpApplication) OnCreate(sessionID string)</a></li>
+          <li><a href="#NoOpApplication.OnLogon">func (n *NoOpApplication) OnLogon(sessionID string)</a></li>
+          <li><a href="#NoOpApplication.OnLogout">func (n *NoOpApplication) OnLogout(sessionID string)</a></li>
+          <li><a href="#NoOpApplication.OnMessage">func (n *NoOpApplication) OnMessage(msg *fixmsg.FixMessage, sessionID string)</a></li>
+          <li><a href="#NoOpApplication.OnReject">func (n *NoOpApplication) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string)</a></li>
+          <li><a href="#NoOpApplication.ToAdmin">func (n *NoOpApplication) ToAdmin(msg *fixmsg.FixMessage, sessionID string) error</a></li>
+          <li><a href="#NoOpApplication.ToApp">func (n *NoOpApplication) ToApp(msg *fixmsg.FixMessage, sessionID string) error</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#SeqManager">type SeqManager</a>
+      <ul>
+          <li><a href="#NewSeqManager">func NewSeqManager(st store.Store, sessionID string) *SeqManager</a></li>
+          <li><a href="#SeqManager.Incoming">func (s *SeqManager) Incoming() int</a></li>
+          <li><a href="#SeqManager.IncrementIncoming">func (s *SeqManager) IncrementIncoming() (int, error)</a></li>
+          <li><a href="#SeqManager.IncrementOutgoing">func (s *SeqManager) IncrementOutgoing() (int, error)</a></li>
+          <li><a href="#SeqManager.Outgoing">func (s *SeqManager) Outgoing() int</a></li>
+          <li><a href="#SeqManager.SetIncoming">func (s *SeqManager) SetIncoming(n int) error</a></li>
+          <li><a href="#SeqManager.SetOutgoing">func (s *SeqManager) SetOutgoing(n int) error</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-functions">Functions</h3>
+  <h3 id="NewDefaultStateMachine">func NewDefaultStateMachine</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewDefaultStateMachine</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="../state"><span class="nx">state</span></a><span class="p">.</span><a href="../state#StateMachine"><span class="nx">StateMachine</span></a></pre>
+    <p>NewDefaultStateMachine creates a new state machine for a session.
+<h3 id="NewDefaultStore">func NewDefaultStore</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewDefaultStore</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="../store"><span class="nx">store</span></a><span class="p">.</span><a href="../store#Store"><span class="nx">Store</span></a></pre>
+    <p>NewDefaultStore creates a new message store for a session.
+<h3 id="ValidateMessage">func ValidateMessage</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">ValidateMessage</span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg/spec"><span class="nx">spec</span></a><span class="p">.</span><a href="../fixmsg/spec#FixSpec"><span class="nx">FixSpec</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+    <p>ValidateMessage checks if a FIX message is structurally valid against standard rules
+and optionally against a Data Dictionary (FixSpec) if provided.
+<h3 id="pkg-types">Types</h3>
+  <h3 id="Application">type Application</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Application</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// OnCreate is called when a session is created (before logon).</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnCreate"><span class="nf">OnCreate</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// OnLogon is called after a successful logon.</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnLogon"><span class="nf">OnLogon</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// OnLogout is called after a logout.</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnLogout"><span class="nf">OnLogout</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// ToAdmin is called just before an admin message (35=A/5/0/1/2/3/4) is sent.</span><span class="w">
+</span><span class="w">	</span><span class="c1">// The application may modify the message or return error to reject sending.</span><span class="w">
+</span><span class="w">	</span><span id="Application.ToAdmin"><span class="nf">ToAdmin</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// FromAdmin is called after an admin message is received and parsed.</span><span class="w">
+</span><span class="w">	</span><span class="c1">// The application may reject processing by returning error.</span><span class="w">
+</span><span class="w">	</span><span id="Application.FromAdmin"><span class="nf">FromAdmin</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// ToApp is called just before an application message (not admin) is sent.</span><span class="w">
+</span><span class="w">	</span><span class="c1">// The application may modify the message or return error to reject sending.</span><span class="w">
+</span><span class="w">	</span><span id="Application.ToApp"><span class="nf">ToApp</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// FromApp is called after an application message is received and parsed.</span><span class="w">
+</span><span class="w">	</span><span class="c1">// The application may reject processing by returning error.</span><span class="w">
+</span><span class="w">	</span><span id="Application.FromApp"><span class="nf">FromApp</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// OnMessage is called for every application-level message after it has been received and processed.</span><span class="w">
+</span><span class="w">	</span><span class="c1">// This is called after FromApp regardless of result. Use this for generic message handling.</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnMessage"><span class="nf">OnMessage</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// OnReject is called when a message is rejected (e.g., invalid seqnum, parsing error).</span><span class="w">
+</span><span class="w">	</span><span id="Application.OnReject"><span class="nf">OnReject</span></span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">reason</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Application defines callbacks for FIX session lifecycle and message events.
+Applications implement this interface to hook into session management and message processing.
+<h3 id="FixEngine">type FixEngine</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">FixEngine</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Initiator"><span class="nx">Initiator</span></span><span class="w"> </span><span class="o">*</span><a href="../network"><span class="nx">network</span></a><span class="p">.</span><a href="../network#Initiator"><span class="nx">Initiator</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Conn"><span class="nx">Conn</span></span><span class="w">      </span><a href="https://pkg.go.dev/net"><span class="nx">net</span></a><span class="p">.</span><a href="https://pkg.go.dev/net#Conn"><span class="nx">Conn</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Session"><span class="nx">Session</span></span><span class="w">   </span><span class="o">*</span><a href="session"><span class="nx">session</span></a><span class="p">.</span><a href="session#Session"><span class="nx">Session</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Proc"><span class="nx">Proc</span></span><span class="w">      </span><span class="o">*</span><a href="handler"><span class="nx">handler</span></a><span class="p">.</span><a href="handler#Processor"><span class="nx">Processor</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.SM"><span class="nx">SM</span></span><span class="w">        </span><span class="o">*</span><a href="../state"><span class="nx">state</span></a><span class="p">.</span><a href="../state#StateMachine"><span class="nx">StateMachine</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Store"><span class="nx">Store</span></span><span class="w">     </span><a href="../store"><span class="nx">store</span></a><span class="p">.</span><a href="../store#Store"><span class="nx">Store</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.SeqMgr"><span class="nx">SeqMgr</span></span><span class="w">    </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Monitor"><span class="nx">Monitor</span></span><span class="w">   </span><span class="o">*</span><a href="#HeartbeatMonitor"><span class="nx">HeartbeatMonitor</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// configured CompIDs for outgoing admin messages</span><span class="w">
+</span><span class="w">	</span><span id="FixEngine.SenderCompID"><span class="nx">SenderCompID</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="FixEngine.TargetCompID"><span class="nx">TargetCompID</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// application callbacks</span><span class="w">
+</span><span class="w">	</span><span id="FixEngine.App"><span class="nx">App</span></span><span class="w"> </span><a href="#Application"><span class="nx">Application</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// logger for engine operations</span><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Logger"><span class="nx">Logger</span></span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/log/slog"><span class="nx">slog</span></a><span class="p">.</span><a href="https://pkg.go.dev/log/slog#Logger"><span class="nx">Logger</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// scheduler for config-driven actions</span><span class="w">
+</span><span class="w">	</span><span id="FixEngine.Scheduler"><span class="nx">Scheduler</span></span><span class="w"> </span><span class="o">*</span><a href="../scheduler"><span class="nx">scheduler</span></a><span class="p">.</span><a href="../scheduler#RuntimeScheduler"><span class="nx">RuntimeScheduler</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>FixEngine holds components needed for a session.
+<h4 id="NewFixEngine">func NewFixEngine</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewFixEngine</span><span class="p">(</span><span class="nx">init</span><span class="w"> </span><span class="o">*</span><a href="../network"><span class="nx">network</span></a><span class="p">.</span><a href="../network#Initiator"><span class="nx">Initiator</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a></pre>
+  <h4 id="FixEngine.AttachSession">func (*FixEngine) AttachSession</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">AttachSession</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="session"><span class="nx">session</span></a><span class="p">.</span><a href="session#Session"><span class="nx">Session</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>AttachSession attaches an existing Session to the engine and starts monitor and heartbeat sender.
+<h4 id="FixEngine.Close">func (*FixEngine) Close</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Close</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="FixEngine.Connect">func (*FixEngine) Connect</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Connect</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="FixEngine.DetachSession">func (*FixEngine) DetachSession</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">DetachSession</span><span class="p">()</span></pre>
+  <p>DetachSession stops heartbeat and monitor and detaches session
+<h4 id="FixEngine.GetApp">func (*FixEngine) GetApp</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetApp</span><span class="p">()</span><span class="w"> </span><a href="handler"><span class="nx">handler</span></a><span class="p">.</span><a href="handler#Application"><span class="nx">Application</span></a></pre>
+  <p>GetApp returns the application callback handler.
+<h4 id="FixEngine.GetLogger">func (*FixEngine) GetLogger</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetLogger</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/log/slog"><span class="nx">slog</span></a><span class="p">.</span><a href="https://pkg.go.dev/log/slog#Logger"><span class="nx">Logger</span></a></pre>
+  <h4 id="FixEngine.GetSeqMgr">func (*FixEngine) GetSeqMgr</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetSeqMgr</span><span class="p">()</span><span class="w"> </span><a href="handler"><span class="nx">handler</span></a><span class="p">.</span><a href="handler#SeqMgrI"><span class="nx">SeqMgrI</span></a></pre>
+  <p>GetSeqMgr returns the sequence manager.
+<h4 id="FixEngine.GetSessionID">func (*FixEngine) GetSessionID</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetSessionID</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <p>GetSessionID returns the session ID.
+<h4 id="FixEngine.HandleIncoming">func (*FixEngine) HandleIncoming</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">HandleIncoming</span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>HandleIncoming processes an incoming FIX message using registered handlers.
+<h4 id="FixEngine.SendMessage">func (*FixEngine) SendMessage</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SendMessage</span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>SendMessage sends a FIX message with automatic field setup (CompIDs, SeqNum, SendingTime).
+<h4 id="FixEngine.SessionSend">func (*FixEngine) SessionSend</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SessionSend</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="FixEngine.SetApplication">func (*FixEngine) SetApplication</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetApplication</span><span class="p">(</span><span class="nx">app</span><span class="w"> </span><a href="#Application"><span class="nx">Application</span></a><span class="p">)</span></pre>
+  <p>SetApplication sets the application callback handler.
+<h4 id="FixEngine.SetReconnectParams">func (*FixEngine) SetReconnectParams</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetReconnectParams</span><span class="p">(</span><span class="nx">initial</span><span class="p">,</span><span class="w"> </span><span class="nx">max</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Duration"><span class="nx">Duration</span></a><span class="p">,</span><span class="w"> </span><span class="nx">enable</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <p>SetReconnectParams configures reconnect/backoff policy
+<h4 id="FixEngine.SetSessionID">func (*FixEngine) SetSessionID</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetSessionID</span><span class="p">(</span><span class="nx">sid</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <p>SetSessionID sets the session ID for application callbacks.
+<h4 id="FixEngine.SetupComponents">func (*FixEngine) SetupComponents</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetupComponents</span><span class="p">(</span><span class="nx">sm</span><span class="w"> </span><span class="o">*</span><a href="../state"><span class="nx">state</span></a><span class="p">.</span><a href="../state#StateMachine"><span class="nx">StateMachine</span></a><span class="p">,</span><span class="w"> </span><span class="nx">st</span><span class="w"> </span><a href="../store"><span class="nx">store</span></a><span class="p">.</span><a href="../store#Store"><span class="nx">Store</span></a><span class="p">)</span></pre>
+  <p>SetupComponents wires state machine and store into the engine and registers handlers.
+Also loads TLS configuration from config if ssl_* keys are present.
+<h4 id="FixEngine.StartScheduler">func (*FixEngine) StartScheduler</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">StartScheduler</span><span class="p">()</span></pre>
+  <p>StartScheduler begins the runtime scheduler
+<h4 id="FixEngine.StopScheduler">func (*FixEngine) StopScheduler</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">StopScheduler</span><span class="p">()</span></pre>
+  <p>StopScheduler halts the runtime scheduler
+<h3 id="HeartbeatMonitor">type HeartbeatMonitor</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">HeartbeatMonitor</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="HeartbeatMonitor.Interval"><span class="nx">Interval</span></span><span class="w">       </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Duration"><span class="nx">Duration</span></a><span class="w">
+</span><span class="w">	</span><span id="HeartbeatMonitor.TestReqTimeout"><span class="nx">TestReqTimeout</span></span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Duration"><span class="nx">Duration</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>HeartbeatMonitor monitors inbound traffic and sends TestRequest when peer misses heartbeats.
+<h4 id="NewHeartbeatMonitor">func NewHeartbeatMonitor</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewHeartbeatMonitor</span><span class="p">(</span><span class="nx">e</span><span class="w"> </span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">,</span><span class="w"> </span><span class="nx">interval</span><span class="p">,</span><span class="w"> </span><span class="nx">testReqTimeout</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Duration"><span class="nx">Duration</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#HeartbeatMonitor"><span class="nx">HeartbeatMonitor</span></a></pre>
+  <h4 id="HeartbeatMonitor.Seen">func (*HeartbeatMonitor) Seen</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">h</span><span class="w"> </span><span class="o">*</span><a href="#HeartbeatMonitor"><span class="nx">HeartbeatMonitor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Seen</span><span class="p">()</span></pre>
+  <h4 id="HeartbeatMonitor.Start">func (*HeartbeatMonitor) Start</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">h</span><span class="w"> </span><span class="o">*</span><a href="#HeartbeatMonitor"><span class="nx">HeartbeatMonitor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Start</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><a href="https://pkg.go.dev/context"><span class="nx">context</span></a><span class="p">.</span><a href="https://pkg.go.dev/context#Context"><span class="nx">Context</span></a><span class="p">)</span></pre>
+  <h4 id="HeartbeatMonitor.Stop">func (*HeartbeatMonitor) Stop</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">h</span><span class="w"> </span><span class="o">*</span><a href="#HeartbeatMonitor"><span class="nx">HeartbeatMonitor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Stop</span><span class="p">()</span></pre>
+  <h3 id="MultiSessionEngine">type MultiSessionEngine</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">MultiSessionEngine</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Acceptor listens for incoming connections</span><span class="w">
+</span><span class="w">	</span><span id="MultiSessionEngine.Acceptor"><span class="nx">Acceptor</span></span><span class="w"> </span><span class="o">*</span><a href="../network"><span class="nx">network</span></a><span class="p">.</span><a href="../network#Acceptor"><span class="nx">Acceptor</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Application callback interface (shared across all sessions)</span><span class="w">
+</span><span class="w">	</span><span id="MultiSessionEngine.App"><span class="nx">App</span></span><span class="w"> </span><a href="#Application"><span class="nx">Application</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Per-session factories (for creating state machines and stores)</span><span class="w">
+</span><span class="w">	</span><span id="MultiSessionEngine.StateMachineFactory"><span class="nx">StateMachineFactory</span></span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="../state"><span class="nx">state</span></a><span class="p">.</span><a href="../state#StateMachine"><span class="nx">StateMachine</span></a><span class="w">
+</span><span class="w">	</span><span id="MultiSessionEngine.StoreFactory"><span class="nx">StoreFactory</span></span><span class="w">        </span><span class="kd">func</span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="../store"><span class="nx">store</span></a><span class="p">.</span><a href="../store#Store"><span class="nx">Store</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>MultiSessionEngine manages multiple concurrent FIX sessions.
+It supports acceptor-mode operation where multiple initiators can connect
+to a single acceptor, each establishing its own independent session.
+<h4 id="NewMultiSessionEngine">func NewMultiSessionEngine</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewMultiSessionEngine</span><span class="p">(</span><span class="nx">addr</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a></pre>
+  <p>NewMultiSessionEngine creates a new multi-session engine for the given address.
+<h4 id="MultiSessionEngine.BroadcastMessage">func (*MultiSessionEngine) BroadcastMessage</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">BroadcastMessage</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>BroadcastMessage sends a message to all active sessions (for admin messages).
+<h4 id="MultiSessionEngine.GetSession">func (*MultiSessionEngine) GetSession</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetSession</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#FixEngine"><span class="nx">FixEngine</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <p>GetSession retrieves a session by ID (read-only).
+<h4 id="MultiSessionEngine.SessionCount">func (*MultiSessionEngine) SessionCount</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SessionCount</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <p>SessionCount returns the number of active sessions.
+<h4 id="MultiSessionEngine.SessionIDs">func (*MultiSessionEngine) SessionIDs</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SessionIDs</span><span class="p">()</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <p>SessionIDs returns all active session IDs (for monitoring).
+<h4 id="MultiSessionEngine.SetApplication">func (*MultiSessionEngine) SetApplication</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetApplication</span><span class="p">(</span><span class="nx">app</span><span class="w"> </span><a href="#Application"><span class="nx">Application</span></a><span class="p">)</span></pre>
+  <p>SetApplication sets the application callback for all sessions.
+<h4 id="MultiSessionEngine.SetStateMachineFactory">func (*MultiSessionEngine) SetStateMachineFactory</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetStateMachineFactory</span><span class="p">(</span><span class="nx">factory</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="../state"><span class="nx">state</span></a><span class="p">.</span><a href="../state#StateMachine"><span class="nx">StateMachine</span></a><span class="p">)</span></pre>
+  <p>SetStateMachineFactory sets the factory function for creating state machines per session.
+<h4 id="MultiSessionEngine.SetStoreFactory">func (*MultiSessionEngine) SetStoreFactory</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetStoreFactory</span><span class="p">(</span><span class="nx">factory</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="../store"><span class="nx">store</span></a><span class="p">.</span><a href="../store#Store"><span class="nx">Store</span></a><span class="p">)</span></pre>
+  <p>SetStoreFactory sets the factory function for creating stores per session.
+<h4 id="MultiSessionEngine.Start">func (*MultiSessionEngine) Start</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Start</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Start begins accepting incoming connections.
+Each connection creates a new session with a unique session ID.
+<h4 id="MultiSessionEngine.Stop">func (*MultiSessionEngine) Stop</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#MultiSessionEngine"><span class="nx">MultiSessionEngine</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Stop</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Stop closes all active sessions and stops accepting new connections.
+<h3 id="NoOpApplication">type NoOpApplication</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">NoOpApplication</span><span class="w"> </span><span class="kd">struct</span><span class="p">{}</span></pre>
+    <p>NoOpApplication is a default implementation of Application that does nothing.
+Use this when you don&apos;t need application callbacks.
+<h4 id="NoOpApplication.FromAdmin">func (*NoOpApplication) FromAdmin</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">FromAdmin</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="NoOpApplication.FromApp">func (*NoOpApplication) FromApp</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">FromApp</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="NoOpApplication.OnCreate">func (*NoOpApplication) OnCreate</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">OnCreate</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <h4 id="NoOpApplication.OnLogon">func (*NoOpApplication) OnLogon</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">OnLogon</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <h4 id="NoOpApplication.OnLogout">func (*NoOpApplication) OnLogout</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">OnLogout</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <h4 id="NoOpApplication.OnMessage">func (*NoOpApplication) OnMessage</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">OnMessage</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <h4 id="NoOpApplication.OnReject">func (*NoOpApplication) OnReject</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">OnReject</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">reason</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span></pre>
+  <h4 id="NoOpApplication.ToAdmin">func (*NoOpApplication) ToAdmin</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">ToAdmin</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="NoOpApplication.ToApp">func (*NoOpApplication) ToApp</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><span class="o">*</span><a href="#NoOpApplication"><span class="nx">NoOpApplication</span></a><span class="p">)</span><span class="w"> </span><span class="nf">ToApp</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href="../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h3 id="SeqManager">type SeqManager</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">SeqManager</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>SeqManager manages incoming and outgoing sequence numbers and persists them to store.
+<h4 id="NewSeqManager">func NewSeqManager</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewSeqManager</span><span class="p">(</span><span class="nx">st</span><span class="w"> </span><a href="../store"><span class="nx">store</span></a><span class="p">.</span><a href="../store#Store"><span class="nx">Store</span></a><span class="p">,</span><span class="w"> </span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a></pre>
+  <h4 id="SeqManager.Incoming">func (*SeqManager) Incoming</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Incoming</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <h4 id="SeqManager.IncrementIncoming">func (*SeqManager) IncrementIncoming</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">IncrementIncoming</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="SeqManager.IncrementOutgoing">func (*SeqManager) IncrementOutgoing</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">IncrementOutgoing</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="SeqManager.Outgoing">func (*SeqManager) Outgoing</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Outgoing</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a></pre>
+  <h4 id="SeqManager.SetIncoming">func (*SeqManager) SetIncoming</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetIncoming</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="SeqManager.SetOutgoing">func (*SeqManager) SetOutgoing</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SeqManager"><span class="nx">SeqManager</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetOutgoing</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h3 id="pkg-directories">Directories</h3>
+
+<table>
+  <tbody>
+    <tr>
+        <td><a href="handler">handler</a></td>
+        <td></td>
+      </tr>
+    <tr>
+        <td><a href="session">session</a></td>
+        <td></td>
+      </tr>
+    </tbody>
+</table>
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../../_/icons/favicon.ico"><title>session</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../../..">github.com</a>/<a href="../../..">wxcuop</a>/<a href="../..">gofixmsg</a>/<a href="..">engine</a>/session<span class="navbar-right">
+          <a href="../../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package session</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/engine/session&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li>
+      <a href="#ProcessorIface">type ProcessorIface</a>
+      </li>
+  <li>
+      <a href="#Session">type Session</a>
+      <ul>
+          <li><a href="#NewSession">func NewSession(conn net.Conn, p ProcessorIface) *Session</a></li>
+          <li><a href="#Session.Context">func (s *Session) Context() context.Context</a></li>
+          <li><a href="#Session.Send">func (s *Session) Send(b []byte) (err error)</a></li>
+          <li><a href="#Session.SetOnClose">func (s *Session) SetOnClose(fn func())</a></li>
+          <li><a href="#Session.SetOnMessage">func (s *Session) SetOnMessage(fn func(*fixmsg.FixMessage))</a></li>
+          <li><a href="#Session.Start">func (s *Session) Start()</a></li>
+          <li><a href="#Session.Stop">func (s *Session) Stop()</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-types">Types</h3>
+  <h3 id="ProcessorIface">type ProcessorIface</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">ProcessorIface</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="ProcessorIface.Process"><span class="nf">Process</span></span><span class="p">(</span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>ProcessorIface is the minimal interface Session requires from a processor.
+<h3 id="Session">type Session</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Session</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="Session.Conn"><span class="nx">Conn</span></span><span class="w">      </span><a href="https://pkg.go.dev/net"><span class="nx">net</span></a><span class="p">.</span><a href="https://pkg.go.dev/net#Conn"><span class="nx">Conn</span></a><span class="w">
+</span><span class="w">	</span><span id="Session.Processor"><span class="nx">Processor</span></span><span class="w"> </span><a href="#ProcessorIface"><span class="nx">ProcessorIface</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// OnMessage, if set, is called for each parsed inbound message instead of Processor.Process</span><span class="w">
+</span><span class="w">	</span><span id="Session.OnMessage"><span class="nx">OnMessage</span></span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span class="c1">// OnClose, if set, is called once when the session is closed (by Stop or error)</span><span class="w">
+</span><span class="w">	</span><span id="Session.OnClose"><span class="nx">OnClose</span></span><span class="w"> </span><span class="kd">func</span><span class="p">()</span><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span class="c1">// logger for session operations</span><span class="w">
+</span><span class="w">	</span><span id="Session.Logger"><span class="nx">Logger</span></span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/log/slog"><span class="nx">slog</span></a><span class="p">.</span><a href="https://pkg.go.dev/log/slog#Logger"><span class="nx">Logger</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Session manages the TCP connection, framing and dispatch to a Processor.
+<h4 id="NewSession">func NewSession</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewSession</span><span class="p">(</span><span class="nx">conn</span><span class="w"> </span><a href="https://pkg.go.dev/net"><span class="nx">net</span></a><span class="p">.</span><a href="https://pkg.go.dev/net#Conn"><span class="nx">Conn</span></a><span class="p">,</span><span class="w"> </span><span class="nx">p</span><span class="w"> </span><a href="#ProcessorIface"><span class="nx">ProcessorIface</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Session"><span class="nx">Session</span></a></pre>
+  <h4 id="Session.Context">func (*Session) Context</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#Session"><span class="nx">Session</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Context</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/context"><span class="nx">context</span></a><span class="p">.</span><a href="https://pkg.go.dev/context#Context"><span class="nx">Context</span></a></pre>
+  <p>Start begins the read and write loops and returns immediately.
+Context returns the session&apos;s context for use in monitoring and cancellation.
+<h4 id="Session.Send">func (*Session) Send</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#Session"><span class="nx">Session</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Send</span><span class="p">(</span><span class="nx">b</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">err</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>Send enqueues a raw FIX frame (already with checksum) to the send queue.
+<h4 id="Session.SetOnClose">func (*Session) SetOnClose</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#Session"><span class="nx">Session</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetOnClose</span><span class="p">(</span><span class="nx">fn</span><span class="w"> </span><span class="kd">func</span><span class="p">())</span></pre>
+  <p>SetOnClose registers a callback to be invoked once when the session closes.
+<h4 id="Session.SetOnMessage">func (*Session) SetOnMessage</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#Session"><span class="nx">Session</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetOnMessage</span><span class="p">(</span><span class="nx">fn</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="o">*</span><a href="../../fixmsg"><span class="nx">fixmsg</span></a><span class="p">.</span><a href="../../fixmsg#FixMessage"><span class="nx">FixMessage</span></a><span class="p">))</span></pre>
+  <h4 id="Session.Start">func (*Session) Start</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#Session"><span class="nx">Session</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Start</span><span class="p">()</span></pre>
+  <h4 id="Session.Stop">func (*Session) Stop</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#Session"><span class="nx">Session</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Stop</span><span class="p">()</span></pre>
+  <p>Stop signals shutdown and waits for goroutines to finish.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../../_/js/permalink.js"></script></body>
+</html>

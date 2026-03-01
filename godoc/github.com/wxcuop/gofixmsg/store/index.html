@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>store</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/store<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package store</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/store&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li>
+      <a href="#Message">type Message</a>
+      </li>
+  <li>
+      <a href="#SQLiteStore">type SQLiteStore</a>
+      <ul>
+          <li><a href="#NewSQLiteStore">func NewSQLiteStore() *SQLiteStore</a></li>
+          <li><a href="#SQLiteStore.GetMessage">func (s *SQLiteStore) GetMessage(begin, sender, target string, seq int) (*Message, error)</a></li>
+          <li><a href="#SQLiteStore.GetSessionSeq">func (s *SQLiteStore) GetSessionSeq(sessionID string) (outSeq int, inSeq int, err error)</a></li>
+          <li><a href="#SQLiteStore.Init">func (s *SQLiteStore) Init(path string) error</a></li>
+          <li><a href="#SQLiteStore.SaveMessage">func (s *SQLiteStore) SaveMessage(m *Message) error</a></li>
+          <li><a href="#SQLiteStore.SaveSessionSeq">func (s *SQLiteStore) SaveSessionSeq(sessionID string, outSeq int, inSeq int) error</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Store">type Store</a>
+      </li>
+  </ul><h3 id="pkg-types">Types</h3>
+  <h3 id="Message">type Message</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Message</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="Message.BeginString"><span class="nx">BeginString</span></span><span class="w">  </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="Message.SenderCompID"><span class="nx">SenderCompID</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="Message.TargetCompID"><span class="nx">TargetCompID</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="Message.MsgSeqNum"><span class="nx">MsgSeqNum</span></span><span class="w">    </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span id="Message.MsgType"><span class="nx">MsgType</span></span><span class="w">      </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="Message.Body"><span class="nx">Body</span></span><span class="w">         </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="w">
+</span><span class="w">	</span><span id="Message.Created"><span class="nx">Created</span></span><span class="w">      </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Time"><span class="nx">Time</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Message represents a persisted FIX message.
+<h3 id="SQLiteStore">type SQLiteStore</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">SQLiteStore</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>SQLiteStore implements Store backed by SQLite (modernc.org/sqlite driver).
+<h4 id="NewSQLiteStore">func NewSQLiteStore</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewSQLiteStore</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#SQLiteStore"><span class="nx">SQLiteStore</span></a></pre>
+  <h4 id="SQLiteStore.GetMessage">func (*SQLiteStore) GetMessage</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SQLiteStore"><span class="nx">SQLiteStore</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetMessage</span><span class="p">(</span><span class="nx">begin</span><span class="p">,</span><span class="w"> </span><span class="nx">sender</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">seq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#Message"><span class="nx">Message</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="SQLiteStore.GetSessionSeq">func (*SQLiteStore) GetSessionSeq</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SQLiteStore"><span class="nx">SQLiteStore</span></a><span class="p">)</span><span class="w"> </span><span class="nf">GetSessionSeq</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">outSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">inSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <h4 id="SQLiteStore.Init">func (*SQLiteStore) Init</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SQLiteStore"><span class="nx">SQLiteStore</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Init</span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="SQLiteStore.SaveMessage">func (*SQLiteStore) SaveMessage</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SQLiteStore"><span class="nx">SQLiteStore</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SaveMessage</span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#Message"><span class="nx">Message</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h4 id="SQLiteStore.SaveSessionSeq">func (*SQLiteStore) SaveSessionSeq</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#SQLiteStore"><span class="nx">SQLiteStore</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SaveSessionSeq</span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">outSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">inSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <h3 id="Store">type Store</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Store</span><span class="w"> </span><span class="kd">interface</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Init opens / creates the data store at path.</span><span class="w">
+</span><span class="w">	</span><span id="Store.Init"><span class="nf">Init</span></span><span class="p">(</span><span class="nx">path</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// SaveMessage persists a single message.</span><span class="w">
+</span><span class="w">	</span><span id="Store.SaveMessage"><span class="nf">SaveMessage</span></span><span class="p">(</span><span class="nx">m</span><span class="w"> </span><span class="o">*</span><a href="#Message"><span class="nx">Message</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// GetMessage retrieves a previously saved message by (beginstring, sender, target, seq).</span><span class="w">
+</span><span class="w">	</span><span id="Store.GetMessage"><span class="nf">GetMessage</span></span><span class="p">(</span><span class="nx">begin</span><span class="p">,</span><span class="w"> </span><span class="nx">sender</span><span class="p">,</span><span class="w"> </span><span class="nx">target</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">seq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#Message"><span class="nx">Message</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span><span class="w">
+</span><span class="w">	</span><span class="c1">// SaveSessionSeq stores the last known sequence numbers for a session id.</span><span class="w">
+</span><span class="w">	</span><span id="Store.SaveSessionSeq"><span class="nf">SaveSessionSeq</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">,</span><span class="w"> </span><span class="nx">outSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">inSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// GetSessionSeq returns the last stored sequence numbers for a session id (0 if none).</span><span class="w">
+</span><span class="w">	</span><span id="Store.GetSessionSeq"><span class="nf">GetSessionSeq</span></span><span class="p">(</span><span class="nx">sessionID</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="nx">outSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">inSeq</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Store defines the persistent message store interface used by the engine.
+Implementations must be safe for concurrent use by multiple goroutines.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../_/icons/favicon.ico"><title>network</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../..">github.com</a>/<a href="../..">wxcuop</a>/<a href="..">gofixmsg</a>/network<span class="navbar-right">
+          <a href="../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package network</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/network&#34;</span></pre>
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#LoadTLSConfig">func LoadTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error)</a></li>
+  <li>
+      <a href="#Acceptor">type Acceptor</a>
+      <ul>
+          <li><a href="#NewAcceptor">func NewAcceptor(addr string) *Acceptor</a></li>
+          <li><a href="#Acceptor.AddrString">func (a *Acceptor) AddrString() string</a></li>
+          <li><a href="#Acceptor.Start">func (a *Acceptor) Start(handler func(*Conn)) error</a></li>
+          <li><a href="#Acceptor.Stop">func (a *Acceptor) Stop() error</a></li>
+          <li><a href="#Acceptor.WithTLS">func (a *Acceptor) WithTLS(cfg *tls.Config) *Acceptor</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Conn">type Conn</a>
+      <ul>
+          <li><a href="#NewConn">func NewConn(nc net.Conn) *Conn</a></li>
+          <li><a href="#Conn.Close">func (c *Conn) Close() error</a></li>
+          <li><a href="#Conn.Flush">func (c *Conn) Flush() error</a></li>
+          <li><a href="#Conn.LocalAddr">func (c *Conn) LocalAddr() net.Addr</a></li>
+          <li><a href="#Conn.Read">func (c *Conn) Read(p []byte) (int, error)</a></li>
+          <li><a href="#Conn.ReadByte">func (c *Conn) ReadByte() (byte, error)</a></li>
+          <li><a href="#Conn.RemoteAddr">func (c *Conn) RemoteAddr() net.Addr</a></li>
+          <li><a href="#Conn.Send">func (c *Conn) Send(data []byte) error</a></li>
+          <li><a href="#Conn.SetDeadline">func (c *Conn) SetDeadline(t time.Time) error</a></li>
+          <li><a href="#Conn.SetReadDeadline">func (c *Conn) SetReadDeadline(deadline time.Time) error</a></li>
+          <li><a href="#Conn.SetWriteDeadline">func (c *Conn) SetWriteDeadline(deadline time.Time) error</a></li>
+          <li><a href="#Conn.Underlying">func (c *Conn) Underlying() net.Conn</a></li>
+          <li><a href="#Conn.Write">func (c *Conn) Write(p []byte) (int, error)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#Initiator">type Initiator</a>
+      <ul>
+          <li><a href="#NewInitiator">func NewInitiator(addr string) *Initiator</a></li>
+          <li><a href="#Initiator.Connect">func (i *Initiator) Connect() (*Conn, error)</a></li>
+          <li><a href="#Initiator.WithTLS">func (i *Initiator) WithTLS(cfg *tls.Config) *Initiator</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-functions">Functions</h3>
+  <h3 id="LoadTLSConfig">func LoadTLSConfig</h3>
+    <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">LoadTLSConfig</span><span class="p">(</span><span class="nx">certFile</span><span class="p">,</span><span class="w"> </span><span class="nx">keyFile</span><span class="p">,</span><span class="w"> </span><span class="nx">caFile</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="https://pkg.go.dev/crypto/tls"><span class="nx">tls</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/tls#Config"><span class="nx">Config</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+    <p>LoadTLSConfig loads TLS configuration from certificate files.
+Returns nil if no cert/key files are provided (non-TLS mode).
+Returns an error if cert/key files are specified but cannot be loaded.
+caFile is used to configure both RootCAs (for client cert verification) and ClientCAs (for server cert verification).
+<h3 id="pkg-types">Types</h3>
+  <h3 id="Acceptor">type Acceptor</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Acceptor</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="Acceptor.Addr"><span class="nx">Addr</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">
+</span><span class="w">	</span><span id="Acceptor.TLSConfig"><span class="nx">TLSConfig</span></span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/crypto/tls"><span class="nx">tls</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/tls#Config"><span class="nx">Config</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Acceptor listens for incoming connections and dispatches them to a handler.
+Each accepted connection runs in its own goroutine with proper cleanup.
+<h4 id="NewAcceptor">func NewAcceptor</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewAcceptor</span><span class="p">(</span><span class="nx">addr</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Acceptor"><span class="nx">Acceptor</span></a></pre>
+  <p>NewAcceptor creates a new Acceptor for the given address.
+<h4 id="Acceptor.AddrString">func (*Acceptor) AddrString</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="o">*</span><a href="#Acceptor"><span class="nx">Acceptor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">AddrString</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a></pre>
+  <p>AddrString returns the listener&apos;s address string.
+<h4 id="Acceptor.Start">func (*Acceptor) Start</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="o">*</span><a href="#Acceptor"><span class="nx">Acceptor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Start</span><span class="p">(</span><span class="nx">handler</span><span class="w"> </span><span class="kd">func</span><span class="p">(</span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">))</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Start begins accepting connections on the listener.
+Each connection is wrapped in a Conn with 8192-byte buffers and passed to the handler.
+The handler is called in its own goroutine per client.
+<h4 id="Acceptor.Stop">func (*Acceptor) Stop</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="o">*</span><a href="#Acceptor"><span class="nx">Acceptor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Stop</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Stop gracefully stops the acceptor and waits for all goroutines to finish.
+<h4 id="Acceptor.WithTLS">func (*Acceptor) WithTLS</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="o">*</span><a href="#Acceptor"><span class="nx">Acceptor</span></a><span class="p">)</span><span class="w"> </span><span class="nf">WithTLS</span><span class="p">(</span><span class="nx">cfg</span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/crypto/tls"><span class="nx">tls</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/tls#Config"><span class="nx">Config</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Acceptor"><span class="nx">Acceptor</span></a></pre>
+  <p>WithTLS sets the TLS configuration for the acceptor.
+<h3 id="Conn">type Conn</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Conn</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Conn wraps a net.Conn with Send and SetReadDeadline abstractions.
+This enables consistent handling of both raw TCP and TLS connections.
+<h4 id="NewConn">func NewConn</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewConn</span><span class="p">(</span><span class="nx">nc</span><span class="w"> </span><a href="https://pkg.go.dev/net"><span class="nx">net</span></a><span class="p">.</span><a href="https://pkg.go.dev/net#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a></pre>
+  <p>NewConn creates a new Conn wrapper with 8192-byte buffers (matching Python implementation).
+<h4 id="Conn.Close">func (*Conn) Close</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Close</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Close closes the underlying connection.
+<h4 id="Conn.Flush">func (*Conn) Flush</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Flush</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Flush flushes the write buffer.
+<h4 id="Conn.LocalAddr">func (*Conn) LocalAddr</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">LocalAddr</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/net"><span class="nx">net</span></a><span class="p">.</span><a href="https://pkg.go.dev/net#Addr"><span class="nx">Addr</span></a></pre>
+  <p>LocalAddr returns the local address of the underlying connection.
+<h4 id="Conn.Read">func (*Conn) Read</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Read</span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>Read reads data from the buffered reader.
+<h4 id="Conn.ReadByte">func (*Conn) ReadByte</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">ReadByte</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>ReadByte reads a single byte from the buffered reader.
+<h4 id="Conn.RemoteAddr">func (*Conn) RemoteAddr</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">RemoteAddr</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/net"><span class="nx">net</span></a><span class="p">.</span><a href="https://pkg.go.dev/net#Addr"><span class="nx">Addr</span></a></pre>
+  <p>RemoteAddr returns the remote address of the underlying connection.
+<h4 id="Conn.Send">func (*Conn) Send</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Send</span><span class="p">(</span><span class="nx">data</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>Send writes data to the connection and flushes the buffer.
+<h4 id="Conn.SetDeadline">func (*Conn) SetDeadline</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetDeadline</span><span class="p">(</span><span class="nx">t</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Time"><span class="nx">Time</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>SetDeadline sets both read and write deadlines on the underlying connection.
+<h4 id="Conn.SetReadDeadline">func (*Conn) SetReadDeadline</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetReadDeadline</span><span class="p">(</span><span class="nx">deadline</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Time"><span class="nx">Time</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>SetReadDeadline sets the read deadline for the underlying connection.
+<h4 id="Conn.SetWriteDeadline">func (*Conn) SetWriteDeadline</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">SetWriteDeadline</span><span class="p">(</span><span class="nx">deadline</span><span class="w"> </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Time"><span class="nx">Time</span></a><span class="p">)</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a></pre>
+  <p>SetWriteDeadline sets the write deadline for the underlying connection.
+<h4 id="Conn.Underlying">func (*Conn) Underlying</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Underlying</span><span class="p">()</span><span class="w"> </span><a href="https://pkg.go.dev/net"><span class="nx">net</span></a><span class="p">.</span><a href="https://pkg.go.dev/net#Conn"><span class="nx">Conn</span></a></pre>
+  <p>Underlying returns the underlying net.Conn for advanced operations if needed.
+<h4 id="Conn.Write">func (*Conn) Write</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Write</span><span class="p">(</span><span class="nx">p</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>Write writes data to the connection buffer (satisfies io.Writer).
+Data is buffered; call Flush or Send to ensure delivery.
+<h3 id="Initiator">type Initiator</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Initiator</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="Initiator.Addr"><span class="nx">Addr</span></span><span class="w">      </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="Initiator.Timeout"><span class="nx">Timeout</span></span><span class="w">   </span><a href="https://pkg.go.dev/time"><span class="nx">time</span></a><span class="p">.</span><a href="https://pkg.go.dev/time#Duration"><span class="nx">Duration</span></a><span class="w">
+</span><span class="w">	</span><span id="Initiator.TLSConfig"><span class="nx">TLSConfig</span></span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/crypto/tls"><span class="nx">tls</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/tls#Config"><span class="nx">Config</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Initiator dials a remote address and establishes a connection.
+<h4 id="NewInitiator">func NewInitiator</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewInitiator</span><span class="p">(</span><span class="nx">addr</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Initiator"><span class="nx">Initiator</span></a></pre>
+  <p>NewInitiator creates a new Initiator with default 5-second timeout.
+<h4 id="Initiator.Connect">func (*Initiator) Connect</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="o">*</span><a href="#Initiator"><span class="nx">Initiator</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Connect</span><span class="p">()</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#Conn"><span class="nx">Conn</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>Connect establishes a connection to the remote address.
+Returns a Conn wrapper with 8192-byte buffering.
+<h4 id="Initiator.WithTLS">func (*Initiator) WithTLS</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">i</span><span class="w"> </span><span class="o">*</span><a href="#Initiator"><span class="nx">Initiator</span></a><span class="p">)</span><span class="w"> </span><span class="nf">WithTLS</span><span class="p">(</span><span class="nx">cfg</span><span class="w"> </span><span class="o">*</span><a href="https://pkg.go.dev/crypto/tls"><span class="nx">tls</span></a><span class="p">.</span><a href="https://pkg.go.dev/crypto/tls#Config"><span class="nx">Config</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Initiator"><span class="nx">Initiator</span></a></pre>
+  <p>WithTLS sets the TLS configuration for the connection.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../_/js/permalink.js"></script></body>
+</html>

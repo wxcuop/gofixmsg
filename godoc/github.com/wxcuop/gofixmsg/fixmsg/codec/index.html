@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../../_/icons/favicon.ico"><title>codec</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../../..">github.com</a>/<a href="../../..">wxcuop</a>/<a href="../..">gofixmsg</a>/<a href="..">fixmsg</a>/codec<span class="navbar-right">
+          <a href="../../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package codec</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/fixmsg/codec&#34;</span></pre>
+<p>Package codec implements the FIX wire-format codec.
+<p>Use <a href="#New">New</a> to create a <a href="#Codec">Codec</a> with or without a spec.
+Without a spec, repeating groups are not parsed.
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li><a href="#pkg-constants">Constants</a></li><li>
+      <a href="#Codec">type Codec</a>
+      <ul>
+          <li><a href="#New">func New(s *spec.FixSpec) *Codec</a></li>
+          <li><a href="#NewNoGroups">func NewNoGroups() *Codec</a></li>
+          <li><a href="#Codec.Parse">func (c *Codec) Parse(buf []byte) (*fixmsg.FixMessage, error)</a></li>
+          <li><a href="#Codec.Serialise">func (c *Codec) Serialise(msg *fixmsg.FixMessage) ([]byte, error)</a></li>
+          <li><a href="#Codec.WithSeparator">func (c *Codec) WithSeparator(sep byte) *Codec</a></li>
+          </ul>
+      </li>
+  </ul><h3 id="pkg-constants">Constants</h3>
+  <pre class="chroma"><span class="kd">const</span><span class="w"> </span><span class="p">(</span><span class="w">
+</span><span class="w">	</span><span class="c1">// SOH is the standard FIX field separator (ASCII 0x01).</span><span class="w">
+</span><span class="w">	</span><span id="SOH"><span class="nx">SOH</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="sc">&#39;\x01&#39;</span><span class="w">
+</span><span class="w">	</span><span class="c1">// Delimiter separates tag from value within a field.</span><span class="w">
+</span><span class="w">	</span><span id="Delimiter"><span class="nx">Delimiter</span></span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="sc">&#39;=&#39;</span><span class="w">
+</span><span class="w"></span><span class="p">)</span></pre>
+  <h3 id="pkg-types">Types</h3>
+  <h3 id="Codec">type Codec</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">Codec</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="Codec.Spec"><span class="nx">Spec</span></span><span class="w">      </span><span class="o">*</span><a href="../spec"><span class="nx">spec</span></a><span class="p">.</span><a href="../spec#FixSpec"><span class="nx">FixSpec</span></a><span class="w">
+</span><span class="w">	</span><span id="Codec.Separator"><span class="nx">Separator</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="w">
+</span><span class="w">	</span><span class="c1">// contains filtered or unexported fields</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>Codec parses and serialises FIX messages.
+It implements <a href="..#Codec">fixmsg.Codec</a> and can be stored in <a href="..#FixMessage.Codec">fixmsg.FixMessage.Codec</a>.
+<h4 id="New">func New</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">New</span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="../spec"><span class="nx">spec</span></a><span class="p">.</span><a href="../spec#FixSpec"><span class="nx">FixSpec</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Codec"><span class="nx">Codec</span></a></pre>
+  <p>New returns a Codec using the provided spec (may be nil).
+<h4 id="NewNoGroups">func NewNoGroups</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">NewNoGroups</span><span class="p">()</span><span class="w"> </span><span class="o">*</span><a href="#Codec"><span class="nx">Codec</span></a></pre>
+  <p>NewNoGroups returns a Codec that never parses repeating groups.
+<h4 id="Codec.Parse">func (*Codec) Parse</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Codec"><span class="nx">Codec</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Parse</span><span class="p">(</span><span class="nx">buf</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href=".."><span class="nx">fixmsg</span></a><span class="p">.</span><a href="..#FixMessage"><span class="nx">FixMessage</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>Parse creates a <a href="..#FixMessage">fixmsg.FixMessage</a> from FIX wire-format bytes.
+<h4 id="Codec.Serialise">func (*Codec) Serialise</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Codec"><span class="nx">Codec</span></a><span class="p">)</span><span class="w"> </span><span class="nf">Serialise</span><span class="p">(</span><span class="nx">msg</span><span class="w"> </span><span class="o">*</span><a href=".."><span class="nx">fixmsg</span></a><span class="p">.</span><a href="..#FixMessage"><span class="nx">FixMessage</span></a><span class="p">)</span><span class="w"> </span><span class="p">([]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>Serialise converts msg to FIX wire-format bytes.
+<h4 id="Codec.WithSeparator">func (*Codec) WithSeparator</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">c</span><span class="w"> </span><span class="o">*</span><a href="#Codec"><span class="nx">Codec</span></a><span class="p">)</span><span class="w"> </span><span class="nf">WithSeparator</span><span class="p">(</span><span class="nx">sep</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#Codec"><span class="nx">Codec</span></a></pre>
+  <p>WithSeparator returns a copy of c that uses sep instead of SOH.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../../_/js/permalink.js"></script></body>
+</html>

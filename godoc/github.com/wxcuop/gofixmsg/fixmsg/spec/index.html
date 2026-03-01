@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="doc2go">
+    <link href="../../../../../_/css/main.css" rel="stylesheet" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../../../../../_/icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../../../../_/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../../../../_/icons/favicon-16x16.png">
+    <link rel="shortcut icon" href="../../../../../_/icons/favicon.ico"><title>spec</title>
+</head>
+  <body>
+    <nav>
+        <a href="../../../..">github.com</a>/<a href="../../..">wxcuop</a>/<a href="../..">gofixmsg</a>/<a href="..">fixmsg</a>/spec<span class="navbar-right">
+          <a href="../../../../..">Root</a> | <a href="#pkg-index">Index</a></span>
+      </nav>
+    <main><h2 id="pkg-overview">package spec</h2>
+<pre class="chroma"><span class="kn">import</span><span class="w"> </span><span class="s">&#34;github.com/wxcuop/gofixmsg/fixmsg/spec&#34;</span></pre>
+<p>Package spec loads QuickFIX XML specification files.
+<h3 id="pkg-index">Index</h3>
+<ul>
+  <li>
+      <a href="#FixSpec">type FixSpec</a>
+      <ul>
+          <li><a href="#Load">func Load(filename string) (*FixSpec, error)</a></li>
+          <li><a href="#LoadBytes">func LoadBytes(data []byte) (*FixSpec, error)</a></li>
+          <li><a href="#FixSpec.MessageByType">func (s *FixSpec) MessageByType(msgType string) *MessageSpec</a></li>
+          <li><a href="#FixSpec.TagByNumber">func (s *FixSpec) TagByNumber(n int) *FixTag</a></li>
+          <li><a href="#FixSpec.TagNumber">func (s *FixSpec) TagNumber(tagName string) (int, bool)</a></li>
+          </ul>
+      </li>
+  <li>
+      <a href="#FixTag">type FixTag</a>
+      </li>
+  <li>
+      <a href="#GroupSpec">type GroupSpec</a>
+      </li>
+  <li>
+      <a href="#MessageSpec">type MessageSpec</a>
+      </li>
+  </ul><h3 id="pkg-types">Types</h3>
+  <h3 id="FixSpec">type FixSpec</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">FixSpec</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="FixSpec.Version"><span class="nx">Version</span></span><span class="w">        </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="FixSpec.Tags"><span class="nx">Tags</span></span><span class="w">           </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><span class="o">*</span><a href="#FixTag"><span class="nx">FixTag</span></a><span class="w">
+</span><span class="w">	</span><span id="FixSpec.MessagesByType"><span class="nx">MessagesByType</span></span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">]</span><span class="o">*</span><a href="#MessageSpec"><span class="nx">MessageSpec</span></a><span class="w">
+</span><span class="w">	</span><span id="FixSpec.MessagesByName"><span class="nx">MessagesByName</span></span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">]</span><span class="o">*</span><a href="#MessageSpec"><span class="nx">MessageSpec</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>FixSpec is the in-memory representation of a QuickFIX XML specification.
+<h4 id="Load">func Load</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">Load</span><span class="p">(</span><span class="nx">filename</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#FixSpec"><span class="nx">FixSpec</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>Load parses a QuickFIX XML spec file.
+<h4 id="LoadBytes">func LoadBytes</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="nf">LoadBytes</span><span class="p">(</span><span class="nx">data</span><span class="w"> </span><span class="p">[]</span><a href="https://pkg.go.dev/builtin#byte"><span class="kt">byte</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="o">*</span><a href="#FixSpec"><span class="nx">FixSpec</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#error"><span class="kt">error</span></a><span class="p">)</span></pre>
+  <p>LoadBytes parses a QuickFIX XML spec from in-memory bytes (useful in tests).
+<h4 id="FixSpec.MessageByType">func (*FixSpec) MessageByType</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#FixSpec"><span class="nx">FixSpec</span></a><span class="p">)</span><span class="w"> </span><span class="nf">MessageByType</span><span class="p">(</span><span class="nx">msgType</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#MessageSpec"><span class="nx">MessageSpec</span></a></pre>
+  <p>MessageByType returns the MessageSpec for the given MsgType (e.g. &quot;D&quot;).
+<h4 id="FixSpec.TagByNumber">func (*FixSpec) TagByNumber</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#FixSpec"><span class="nx">FixSpec</span></a><span class="p">)</span><span class="w"> </span><span class="nf">TagByNumber</span><span class="p">(</span><span class="nx">n</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">)</span><span class="w"> </span><span class="o">*</span><a href="#FixTag"><span class="nx">FixTag</span></a></pre>
+  <p>TagByNumber returns the FixTag for tag number n.
+<h4 id="FixSpec.TagNumber">func (*FixSpec) TagNumber</h4>
+  <pre class="chroma"><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><a href="#FixSpec"><span class="nx">FixSpec</span></a><span class="p">)</span><span class="w"> </span><span class="nf">TagNumber</span><span class="p">(</span><span class="nx">tagName</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">)</span><span class="w"> </span><span class="p">(</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">,</span><span class="w"> </span><a href="https://pkg.go.dev/builtin#bool"><span class="kt">bool</span></a><span class="p">)</span></pre>
+  <p>TagNumber returns the tag number for tagName, (0, false) if unknown.
+<h3 id="FixTag">type FixTag</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">FixTag</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="FixTag.Number"><span class="nx">Number</span></span><span class="w"> </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span id="FixTag.Name"><span class="nx">Name</span></span><span class="w">   </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="FixTag.Type"><span class="nx">Type</span></span><span class="w">   </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="FixTag.Values"><span class="nx">Values</span></span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="p">]</span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w"> </span><span class="c1">// Enum values</span><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>FixTag describes a single FIX tag from the specification.
+<h3 id="GroupSpec">type GroupSpec</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">GroupSpec</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="GroupSpec.NumberTag"><span class="nx">NumberTag</span></span><span class="w">    </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span id="GroupSpec.FirstTag"><span class="nx">FirstTag</span></span><span class="w">     </span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="w">
+</span><span class="w">	</span><span id="GroupSpec.RequiredTags"><span class="nx">RequiredTags</span></span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><span class="kd">struct</span><span class="p">{}</span><span class="w">
+</span><span class="w">	</span><span id="GroupSpec.Tags"><span class="nx">Tags</span></span><span class="w">         </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><span class="kd">struct</span><span class="p">{}</span><span class="w">
+</span><span class="w">	</span><span id="GroupSpec.NestedGroups"><span class="nx">NestedGroups</span></span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><span class="o">*</span><a href="#GroupSpec"><span class="nx">GroupSpec</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>GroupSpec describes a single repeating group within a message or nested group.
+<h3 id="MessageSpec">type MessageSpec</h3>
+    <pre class="chroma"><span class="kd">type</span><span class="w"> </span><span class="nx">MessageSpec</span><span class="w"> </span><span class="kd">struct</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span id="MessageSpec.Name"><span class="nx">Name</span></span><span class="w">         </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="MessageSpec.MsgType"><span class="nx">MsgType</span></span><span class="w">      </span><a href="https://pkg.go.dev/builtin#string"><span class="kt">string</span></a><span class="w">
+</span><span class="w">	</span><span id="MessageSpec.RequiredTags"><span class="nx">RequiredTags</span></span><span class="w"> </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><span class="kd">struct</span><span class="p">{}</span><span class="w">
+</span><span class="w">	</span><span id="MessageSpec.Tags"><span class="nx">Tags</span></span><span class="w">         </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><span class="kd">struct</span><span class="p">{}</span><span class="w">
+</span><span class="w">	</span><span id="MessageSpec.Groups"><span class="nx">Groups</span></span><span class="w">       </span><span class="kd">map</span><span class="p">[</span><a href="https://pkg.go.dev/builtin#int"><span class="kt">int</span></a><span class="p">]</span><span class="o">*</span><a href="#GroupSpec"><span class="nx">GroupSpec</span></a><span class="w">
+</span><span class="w"></span><span class="p">}</span></pre>
+    <p>MessageSpec describes the fields and repeating groups of one FIX message type.
+</main>
+    <hr>
+    <footer>
+      <small id="generated-by-footer">
+        Generated with <a href="https://abhinav.github.io/doc2go/">doc2go</a>
+      </small>
+    </footer>
+    <script src="../../../../../_/js/permalink.js"></script></body>
+</html>
