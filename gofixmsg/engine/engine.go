@@ -344,8 +344,13 @@ func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error {
 		return err
 	}
 	// prefer SessionSend when session is present
-	if e.Session != nil {
-		return e.Session.Send(b)
+	// use lock to prevent race with DetachSession
+	e.attachMu.Lock()
+	sess := e.Session
+	e.attachMu.Unlock()
+	
+	if sess != nil {
+		return sess.Send(b)
 	}
 	if e.Conn == nil {
 		return fmt.Errorf("no connection")
