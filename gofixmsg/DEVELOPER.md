@@ -827,11 +827,50 @@ acceptor.Start(func(conn *network.Conn) {
 })
 ```
 
+### Data Race Prevention
+
+**Critical synchronization points:**
+
+1. **FixEngine.AttachSession/DetachSession (`engine/attach.go`)**
+   - Protected by `attachMu sync.Mutex`
+   - Ensures atomic initialization of Monitor and hbSender before session starts
+   - Prevents race when callbacks execute on parallel goroutine
+
+2. **Heartbeat.Start/Stop (`heartbeat/heartbeat.go`)**
+   - Protected by `mu sync.Mutex`
+   - Synchronizes access to `cancel` context handle
+   - Prevents concurrent start/stop races
+
+3. **Test integration callbacks (`integration/application_callbacks_test.go`)**
+   - Application callback implementations must protect shared state with mutex
+   - Test assertion functions must acquire mutex before reading callback order
+
+**Key initialization order principle:**
+```go
+// CORRECT: Monitors initialized BEFORE session starts
+e.Monitor = NewHeartbeatMonitor(...)
+e.hbSender = heartbeat.New(...)
+s.Start()  // Now safe for callbacks to access Monitor/hbSender
+
+// WRONG: Monitors initialized after session starts
+s.Start()
+e.Monitor = NewHeartbeatMonitor(...)  // Race condition!
+```
+
+**Validating data races:**
+```bash
+# Run test suite with race detector enabled
+go test -race ./...
+
+# Zero data races should be detected
+```
+
 ### Thread Safety Guarantees
 
 ✓ FixMessage is thread-safe for concurrent reads  
 ✓ FixMessage is NOT thread-safe for concurrent writes (use mutex if needed)  
-✓ FixEngine operations are thread-safe  
+✓ FixEngine operations are thread-safe (attachMu protects lifecycle)  
+✓ Heartbeat is thread-safe (mu protects start/stop lifecycle)  
 ✓ StateMachine is thread-safe  
 ✓ MessageStore is thread-safe  
 

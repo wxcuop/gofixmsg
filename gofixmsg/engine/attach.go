@@ -15,6 +15,8 @@ func (e *FixEngine) AttachSession(s *session.Session) error {
 	if s == nil {
 		return fmt.Errorf("nil session")
 	}
+	e.attachMu.Lock()
+	defer e.attachMu.Unlock()
 	e.Session = s
 	if e.Logger != nil {
 		s.Logger = e.Logger
@@ -23,7 +25,37 @@ func (e *FixEngine) AttachSession(s *session.Session) error {
 	if e.App != nil {
 		e.App.OnCreate(e.sessionID)
 	}
-	// wire inbound message handling to engine and monitor
+	// Initialize monitor BEFORE starting session so it's available when callbacks execute
+	if e.Monitor == nil {
+		e.Monitor = NewHeartbeatMonitor(e, e.heartbeatInterval, e.heartbeatInterval)
+	}
+	if e.Monitor != nil {
+		e.Monitor.Start(context.Background())
+	}
+	// Initialize heartbeat sender BEFORE starting session
+	if e.hbSender == nil {
+		interval := e.heartbeatInterval
+		if interval <= 0 {
+			interval = 30 * time.Second
+		}
+		e.hbSender = heartbeat.New(interval, func() {
+			// send a minimal heartbeat using configured comp ids
+			sender := e.SenderCompID
+			target := e.TargetCompID
+			if sender == "" {
+				sender = "S"
+			}
+			if target == "" {
+				target = "T"
+			}
+			hb := newHeartbeatMessage(sender, target)
+			if err := e.SendMessage(hb); err != nil {
+				e.Logger.Error("failed to send heartbeat", "error", err)
+			}
+		})
+		e.hbSender.Start(context.Background())
+	}
+	// wire inbound message handling to engine and monitor (now safe since Monitor is initialized)
 	s.SetOnMessage(func(m *fixmsg.FixMessage) {
 		if err := e.HandleIncoming(m); err != nil {
 			e.Logger.Error("failed to handle incoming message", "error", err)
@@ -49,41 +81,13 @@ func (e *FixEngine) AttachSession(s *session.Session) error {
 		}()
 	})
 	s.Start()
-	// ensure monitor present
-	if e.Monitor == nil {
-		e.Monitor = NewHeartbeatMonitor(e, e.heartbeatInterval, e.heartbeatInterval)
-	}
-	if e.Monitor != nil {
-		e.Monitor.Start(context.Background())
-	}
-	// heartbeat sender
-	if e.hbSender == nil {
-		interval := e.heartbeatInterval
-		if interval <= 0 {
-			interval = 30 * time.Second
-		}
-		e.hbSender = heartbeat.New(interval, func() {
-			// send a minimal heartbeat using configured comp ids
-			sender := e.SenderCompID
-			target := e.TargetCompID
-			if sender == "" {
-				sender = "S"
-			}
-			if target == "" {
-				target = "T"
-			}
-			hb := newHeartbeatMessage(sender, target)
-			if err := e.SendMessage(hb); err != nil {
-				e.Logger.Error("failed to send heartbeat", "error", err)
-			}
-		})
-		e.hbSender.Start(context.Background())
-	}
 	return nil
 }
 
 // DetachSession stops heartbeat and monitor and detaches session
 func (e *FixEngine) DetachSession() {
+	e.attachMu.Lock()
+	defer e.attachMu.Unlock()
 	if e.hbSender != nil {
 		e.hbSender.Stop()
 	}

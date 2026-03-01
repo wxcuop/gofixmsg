@@ -45,6 +45,8 @@ type FixEngine struct {
 	reconnectInitial time.Duration
 	reconnectMax     time.Duration
 	enableReconnect  bool // disable for tests by default
+	// attach/detach synchronization
+	attachMu sync.Mutex
 	// application callbacks
 	App Application
 	// session ID for callbacks

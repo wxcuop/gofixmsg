@@ -4,6 +4,7 @@ import (
 	"github.com/wxcuop/gofixmsg/engine/handler"
 	"github.com/wxcuop/gofixmsg/engine/session"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -121,7 +122,10 @@ func TestApplicationCallbacks(t *testing.T) {
 	time.Sleep(10 * time.Millisecond)
 
 	// Verify OnCreate was called
-	require.True(t, hasCallback(*testApp.callOrder, "OnCreate"), "OnCreate should be called")
+	testApp.mu.Lock()
+	onCreateCalled := hasCallback(*testApp.callOrder, "OnCreate")
+	testApp.mu.Unlock()
+	require.True(t, onCreateCalled, "OnCreate should be called")
 
 	// Send Logon (call ToAdmin before SendMessage)
 	logon := handler.NewLogonMessage("CL", "SV")
@@ -137,9 +141,14 @@ func TestApplicationCallbacks(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify callbacks so far
-	require.True(t, hasCallback(*testApp.callOrder, "ToAdmin"), "ToAdmin should be called")
-	require.True(t, hasCallback(*testApp.callOrder, "FromAdmin"), "FromAdmin should be called")
-	require.True(t, hasCallback(*testApp.callOrder, "OnLogon"), "OnLogon should be called")
+	testApp.mu.Lock()
+	hasToAdmin := hasCallback(*testApp.callOrder, "ToAdmin")
+	hasFromAdmin := hasCallback(*testApp.callOrder, "FromAdmin")
+	hasOnLogon := hasCallback(*testApp.callOrder, "OnLogon")
+	testApp.mu.Unlock()
+	require.True(t, hasToAdmin, "ToAdmin should be called")
+	require.True(t, hasFromAdmin, "FromAdmin should be called")
+	require.True(t, hasOnLogon, "OnLogon should be called")
 
 	// Send app message (NewOrder)
 	newOrder := fixmsg.NewFixMessageFromMap(map[int]string{
@@ -151,19 +160,31 @@ func TestApplicationCallbacks(t *testing.T) {
 		52: time.Now().UTC().Format("20060102-15:04:05.000"),
 	})
 	newOrder.SetLenAndChecksum()
-	t.Logf("Sending NewOrder, callOrder before: %v", *testApp.callOrder)
+	testApp.mu.Lock()
+	callOrderBefore := *testApp.callOrder
+	testApp.mu.Unlock()
+	t.Logf("Sending NewOrder, callOrder before: %v", callOrderBefore)
 	require.NoError(t, engineClient.SendMessage(newOrder))
-	t.Logf("Sent NewOrder, callOrder after: %v", *testApp.callOrder)
+	testApp.mu.Lock()
+	callOrderAfter := *testApp.callOrder
+	testApp.mu.Unlock()
+	t.Logf("Sent NewOrder, callOrder after: %v", callOrderAfter)
 
 	// Wait for response
 	time.Sleep(200 * time.Millisecond)
 
 	// Verify ToApp was called (for app message send)
-	require.True(t, hasCallback(*testApp.callOrder, "ToApp"), "ToApp should be called")
+	testApp.mu.Lock()
+	hasToApp := hasCallback(*testApp.callOrder, "ToApp")
+	testApp.mu.Unlock()
+	require.True(t, hasToApp, "ToApp should be called")
 	
 	// Note: FromApp testing requires proper message reception which involves full TCP framing
 	// For now we verify that ToApp is called when sending app messages
-	t.Logf("Final callOrder: %v", *testApp.callOrder)
+	testApp.mu.Lock()
+	finalCallOrder1 := *testApp.callOrder
+	testApp.mu.Unlock()
+	t.Logf("Final callOrder: %v", finalCallOrder1)
 
 	// Send Logout (call ToAdmin before SendMessage)
 	logout := handler.NewLogoutMessage("CL", "SV")
@@ -179,12 +200,16 @@ func TestApplicationCallbacks(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	// Verify OnLogout callback was called
-	require.True(t, hasCallback(*testApp.callOrder, "OnLogout"), "OnLogout should be called")
+	testApp.mu.Lock()
+	hasOnLogout := hasCallback(*testApp.callOrder, "OnLogout")
+	callOrderFinal := *testApp.callOrder
+	testApp.mu.Unlock()
+	require.True(t, hasOnLogout, "OnLogout should be called")
 
 	// Check the order of callbacks makes sense
-	onCreateIdx := indexOf(*testApp.callOrder, "OnCreate")
-	logonIdx := indexOf(*testApp.callOrder, "OnLogon")
-	logoutIdx := indexOf(*testApp.callOrder, "OnLogout")
+	onCreateIdx := indexOf(callOrderFinal, "OnCreate")
+	logonIdx := indexOf(callOrderFinal, "OnLogon")
+	logoutIdx := indexOf(callOrderFinal, "OnLogout")
 
 	require.True(t, onCreateIdx >= 0, "OnCreate should be called")
 	require.True(t, logonIdx >= 0, "OnLogon should be called")
@@ -195,51 +220,70 @@ func TestApplicationCallbacks(t *testing.T) {
 
 // testApplicationImpl is a test implementation of the Application interface
 type testApplicationImpl struct {
+	mu        sync.Mutex
 	callOrder *[]string
 }
 
 func (t *testApplicationImpl) OnCreate(sessionID string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnCreate(%s)", sessionID))
 }
 
 func (t *testApplicationImpl) OnLogon(sessionID string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnLogon(%s)", sessionID))
 }
 
 func (t *testApplicationImpl) OnLogout(sessionID string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnLogout(%s)", sessionID))
 }
 
 func (t *testApplicationImpl) ToAdmin(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("ToAdmin(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) FromAdmin(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("FromAdmin(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) ToApp(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("ToApp(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) FromApp(msg *fixmsg.FixMessage, sessionID string) error {
 	msgType, _ := msg.Get(35)
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("FromApp(MsgType=%s)", msgType))
 	return nil
 }
 
 func (t *testApplicationImpl) OnMessage(msg *fixmsg.FixMessage, sessionID string) {
 	msgType, _ := msg.Get(35)
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnMessage(MsgType=%s)", msgType))
 }
 
 func (t *testApplicationImpl) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnReject(%s)", reason))
 }
 

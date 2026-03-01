@@ -2,6 +2,7 @@ package heartbeat
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -9,6 +10,7 @@ import (
 type Heartbeat struct {
 	Interval time.Duration
 	recv     func()
+	mu       sync.Mutex
 	cancel   context.CancelFunc
 }
 
@@ -17,6 +19,8 @@ func New(interval time.Duration, recv func()) *Heartbeat {
 }
 
 func (h *Heartbeat) Start(ctx context.Context) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	if h.Interval <= 0 {
 		h.Interval = time.Second
 	}
@@ -39,6 +43,8 @@ func (h *Heartbeat) Start(ctx context.Context) {
 }
 
 func (h *Heartbeat) Stop() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 	if h.cancel != nil {
 		h.cancel()
 	}
