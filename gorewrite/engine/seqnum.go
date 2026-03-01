@@ -20,9 +20,14 @@ func NewSeqManager(st store.Store, sessionID string) *SeqManager {
 	m := &SeqManager{store: st, sid: sessionID}
 	// load from store if present
 	if st != nil {
-		seq, err := st.GetSessionSeq(sessionID)
-		if err == nil && seq > 0 {
-			m.out = seq
+		outSeq, inSeq, err := st.GetSessionSeq(sessionID)
+		if err == nil {
+			if outSeq > 0 {
+				m.out = outSeq
+			}
+			if inSeq > 0 {
+				m.in = inSeq
+			}
 		}
 	}
 	return m
@@ -42,16 +47,21 @@ func (s *SeqManager) Outgoing() int {
 
 func (s *SeqManager) SetIncoming(n int) {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.in = n
+	vIn, vOut := s.in, s.out
+	s.mu.Unlock()
+	if s.store != nil {
+		_ = s.store.SaveSessionSeq(s.sid, vOut, vIn)
+	}
 }
 
 func (s *SeqManager) SetOutgoing(n int) error {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.out = n
+	vIn, vOut := s.in, s.out
+	s.mu.Unlock()
 	if s.store != nil {
-		if err := s.store.SaveSessionSeq(s.sid, s.out); err != nil {
+		if err := s.store.SaveSessionSeq(s.sid, vOut, vIn); err != nil {
 			return fmt.Errorf("seqmgr: persist out seq: %w", err)
 		}
 	}
@@ -60,20 +70,24 @@ func (s *SeqManager) SetOutgoing(n int) error {
 
 func (s *SeqManager) IncrementIncoming() int {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	s.in++
-	return s.in
+	vIn, vOut := s.in, s.out
+	s.mu.Unlock()
+	if s.store != nil {
+		_ = s.store.SaveSessionSeq(s.sid, vOut, vIn)
+	}
+	return vIn
 }
 
 func (s *SeqManager) IncrementOutgoing() (int, error) {
 	s.mu.Lock()
 	s.out++
-	v := s.out
+	vIn, vOut := s.in, s.out
 	s.mu.Unlock()
 	if s.store != nil {
-		if err := s.store.SaveSessionSeq(s.sid, v); err != nil {
-			return v, fmt.Errorf("seqmgr: persist out seq: %w", err)
+		if err := s.store.SaveSessionSeq(s.sid, vOut, vIn); err != nil {
+			return vOut, fmt.Errorf("seqmgr: persist out seq: %w", err)
 		}
 	}
-	return v, nil
+	return vOut, nil
 }

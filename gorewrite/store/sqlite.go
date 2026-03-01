@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE TABLE IF NOT EXISTS sessions (
   sessionid TEXT PRIMARY KEY,
-  seq INTEGER NOT NULL
+  seq INTEGER NOT NULL,
+  in_seq INTEGER NOT NULL DEFAULT 0
 );
 `
 	if _, err := db.Exec(schema); err != nil {
@@ -88,28 +89,27 @@ func (s *SQLiteStore) GetMessage(begin, sender, target string, seq int) (*Messag
 	}, nil
 }
 
-func (s *SQLiteStore) SaveSessionSeq(sessionID string, seq int) error {
+func (s *SQLiteStore) SaveSessionSeq(sessionID string, outSeq int, inSeq int) error {
 	if s.db == nil {
 		return fmt.Errorf("sqlite: not initialized")
 	}
-	_, err := s.db.Exec(`INSERT OR REPLACE INTO sessions(sessionid,seq) VALUES(?,?)`, sessionID, seq)
+	_, err := s.db.Exec(`INSERT OR REPLACE INTO sessions(sessionid,seq,in_seq) VALUES(?,?,?)`, sessionID, outSeq, inSeq)
 	if err != nil {
 		return fmt.Errorf("sqlite: save session seq: %w", err)
 	}
 	return nil
 }
 
-func (s *SQLiteStore) GetSessionSeq(sessionID string) (int, error) {
+func (s *SQLiteStore) GetSessionSeq(sessionID string) (outSeq int, inSeq int, err error) {
 	if s.db == nil {
-		return 0, fmt.Errorf("sqlite: not initialized")
+		return 0, 0, fmt.Errorf("sqlite: not initialized")
 	}
-	row := s.db.QueryRow(`SELECT seq FROM sessions WHERE sessionid=?`, sessionID)
-	var seq int
-	if err := row.Scan(&seq); err != nil {
+	row := s.db.QueryRow(`SELECT seq, in_seq FROM sessions WHERE sessionid=?`, sessionID)
+	if err := row.Scan(&outSeq, &inSeq); err != nil {
 		if err == sql.ErrNoRows {
-			return 0, nil
+			return 0, 0, nil
 		}
-		return 0, fmt.Errorf("sqlite: get session seq: %w", err)
+		return 0, 0, fmt.Errorf("sqlite: get session seq: %w", err)
 	}
-	return seq, nil
+	return outSeq, inSeq, nil
 }

@@ -22,8 +22,8 @@ type Store interface {
 	SaveMessage(m *Message) error
 	// GetMessage retrieves a previously saved message by (beginstring, sender, target, seq).
 	GetMessage(begin, sender, target string, seq int) (*Message, error)
-	// SaveSessionSeq stores the last known sequence number for a session id.
-	SaveSessionSeq(sessionID string, seq int) error
-	// GetSessionSeq returns the last stored sequence number for a session id (0 if none).
-	GetSessionSeq(sessionID string) (int, error)
+	// SaveSessionSeq stores the last known sequence numbers for a session id.
+	SaveSessionSeq(sessionID string, outSeq int, inSeq int) error
+	// GetSessionSeq returns the last stored sequence numbers for a session id (0 if none).
+	GetSessionSeq(sessionID string) (outSeq int, inSeq int, err error)
 }

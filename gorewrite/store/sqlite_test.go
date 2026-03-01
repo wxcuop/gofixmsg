@@ -35,8 +35,9 @@ func TestSQLiteStore_SaveGet(t *testing.T) {
 	require.Equal(t, m.MsgType, got.MsgType)
 	require.Equal(t, m.MsgSeqNum, got.MsgSeqNum)
 
-	require.NoError(t, st.SaveSessionSeq("S-T", 42))
-	seq, err := st.GetSessionSeq("S-T")
+	require.NoError(t, st.SaveSessionSeq("S-T", 42, 10))
+	outSeq, inSeq, err := st.GetSessionSeq("S-T")
 	require.NoError(t, err)
-	require.Equal(t, 42, seq)
+	require.Equal(t, 42, outSeq)
+	require.Equal(t, 10, inSeq)
 }

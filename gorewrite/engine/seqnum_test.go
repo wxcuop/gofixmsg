@@ -25,3 +25,32 @@ func TestSeqManager_Basic(t *testing.T) {
 	require.NoError(t, m.SetOutgoing(42))
 	require.Equal(t, 42, m.Outgoing())
 }
+
+func TestSeqManager_Persistence(t *testing.T) {
+	st := store.NewSQLiteStore()
+	f := t.TempDir() + "/persist.db"
+	require.NoError(t, st.Init(f))
+
+	sid := "session-123"
+	m := engine.NewSeqManager(st, sid)
+	
+	// Advance sequences
+	require.NoError(t, m.SetOutgoing(100))
+	m.SetIncoming(50)
+	
+	// Re-load SeqManager with same store and session ID
+	m2 := engine.NewSeqManager(st, sid)
+	require.Equal(t, 100, m2.Outgoing(), "Outgoing seq should be persisted")
+	require.Equal(t, 50, m2.Incoming(), "Incoming seq should be persisted")
+	
+	// Increment and verify
+	v, _ := m2.IncrementOutgoing()
+	require.Equal(t, 101, v)
+	v2 := m2.IncrementIncoming()
+	require.Equal(t, 51, v2)
+	
+	// Re-load again
+	m3 := engine.NewSeqManager(st, sid)
+	require.Equal(t, 101, m3.Outgoing())
+	require.Equal(t, 51, m3.Incoming())
+}

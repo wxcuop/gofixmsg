@@ -108,6 +108,12 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 		if e != "" {
 			ei, _ = strconv.Atoi(e)
 		}
+		if ei == 0 {
+			// FIX standard: 0 means infinity (all messages subsequent to BeginSeqNo)
+			if ctx.Engine != nil && ctx.Engine.SeqMgr != nil {
+				ei = ctx.Engine.SeqMgr.Outgoing()
+			}
+		}
 		if ctx == nil || ctx.Store == nil || ctx.Engine == nil {
 			return nil
 		}
@@ -115,17 +121,68 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 		sender, _ := m.Get(56)
 		target, _ := m.Get(49)
 		for seq := bi; seq <= ei; seq++ {
-			msg, err := ctx.Store.GetMessage("FIX.4.4", target, sender, seq)
+			msg, err := ctx.Store.GetMessage("FIX.4.4", sender, target, seq)
 			if err == nil && msg != nil {
-				// replay stored message bytes — enqueue via SessionSend if available
-				if ctx.Engine != nil {
-					_ = ctx.Engine.SessionSend(msg.Body)
+				// Parse stored message to add PossDupFlag and OrigSendingTime
+				parsedMsg := fixmsg.NewFixMessage()
+				parseErr := parsedMsg.LoadFix(msg.Body)
+				if parseErr == nil {
+					// Don't replay certain admin messages (e.g., Logon, Logout, ResendRequest, Heartbeat, TestRequest, SequenceReset)
+					msgType, _ := parsedMsg.Get(35)
+					if msgType == "A" || msgType == "5" || msgType == "2" || msgType == "0" || msgType == "1" || msgType == "4" {
+						// Admin messages should be replaced by a SequenceReset GapFill
+						sr := NewSequenceResetMessage(target, sender, seq+1, true)
+						// Ensure it uses the original sequence number
+						sr.Set(34, strconv.Itoa(seq))
+						sr.Set(43, "Y")
+						if ctx.Engine != nil && ctx.Engine.App != nil {
+							if err := ctx.Engine.App.ToAdmin(sr, ctx.Engine.sessionID); err != nil {
+								ctx.Engine.App.OnReject(sr, fmt.Sprintf("ToAdmin rejected: %v", err), ctx.Engine.sessionID)
+								continue
+							}
+						}
+						if ctx.Engine != nil {
+							b, _ := sr.ToWire()
+							_ = ctx.Engine.SessionSend(b)
+						}
+						continue
+					}
+
+					// Set PossDupFlag=Y
+					parsedMsg.Set(43, "Y")
+					// Copy SendingTime to OrigSendingTime if missing
+					if origTime, ok := parsedMsg.Get(52); ok && !parsedMsg.Contains(122) {
+						parsedMsg.Set(122, origTime)
+					}
+					// Update SendingTime to now
+					parsedMsg.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+
+					// Re-serialize and send
+					if ctx.Engine != nil {
+						b, err := parsedMsg.ToWire()
+						if err == nil {
+							_ = ctx.Engine.SessionSend(b)
+						}
+					}
+				} else {
+					fmt.Println("Parse error:", parseErr)
+					// Fallback to GapFill if parsing fails
+					sr := NewSequenceResetMessage(target, sender, seq+1, true)
+					sr.Set(34, strconv.Itoa(seq))
+					sr.Set(43, "Y")
+					if ctx.Engine != nil {
+						b, _ := sr.ToWire()
+						_ = ctx.Engine.SessionSend(b)
+					}
 				}
 			} else {
 				// missing: send SequenceReset as GapFill to advance
 				sr := NewSequenceResetMessage(target, sender, seq+1, true)
+				// SequenceReset (GapFill) uses the original sequence number we are skipping
+				sr.Set(34, strconv.Itoa(seq))
+				sr.Set(43, "Y")
 				// Call ToAdmin callback
-				if ctx.Engine.App != nil {
+				if ctx.Engine != nil && ctx.Engine.App != nil {
 					if err := ctx.Engine.App.ToAdmin(sr, ctx.Engine.sessionID); err != nil {
 						if ctx.Engine.App != nil {
 							ctx.Engine.App.OnReject(sr, fmt.Sprintf("ToAdmin rejected: %v", err), ctx.Engine.sessionID)
@@ -134,10 +191,12 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 					}
 				}
 				if ctx.Engine != nil {
-					_ = ctx.Engine.SendMessage(sr)
+					b, _ := sr.ToWire()
+					_ = ctx.Engine.SessionSend(b)
 				}
 			}
 		}
+
 		return nil
 	})
 

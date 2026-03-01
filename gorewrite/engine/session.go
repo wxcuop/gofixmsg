@@ -30,8 +30,8 @@ type Session struct {
 	sendCh chan []byte
 	// OnMessage, if set, is called for each parsed inbound message instead of Processor.Process
 	OnMessage func(*fixmsg.FixMessage)
-	// OnClose, if set, is called once when the session is closed (by Stop or error)
-	OnClose func()
+	// onCloseListeners are called once when the session is closed
+	onCloseListeners []func()
 	// internal flag to ensure OnClose is called only once
 	onCloseCalled bool
 }
@@ -40,17 +40,30 @@ func (s *Session) SetOnMessage(fn func(*fixmsg.FixMessage)) {
 	s.OnMessage = fn
 }
 
-// SetOnClose registers a callback to be invoked once when the session closes.
+// AddOnClose registers a callback to be invoked once when the session closes.
+func (s *Session) AddOnClose(fn func()) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.onCloseListeners = append(s.onCloseListeners, fn)
+}
+
+// SetOnClose registers a callback to be invoked once when the session closes. (Legacy support)
 func (s *Session) SetOnClose(fn func()) {
-	s.OnClose = fn
+	s.AddOnClose(fn)
 }
 
 func NewSession(conn net.Conn, p ProcessorIface) *Session {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Session{Conn: conn, Processor: p, ctx: ctx, cancel: cancel, sendCh: make(chan []byte, 128)}
+	return &Session{
+		Conn:      conn,
+		Processor: p,
+		ctx:       ctx,
+		cancel:    cancel,
+		sendCh:    make(chan []byte, 128),
+	}
 }
 
-// onCloseOnce invokes the OnClose callback at most once.
+// onCloseOnce invokes the OnClose callbacks at most once.
 func (s *Session) onCloseOnce() {
 	s.mu.Lock()
 	if s.onCloseCalled {
@@ -58,10 +71,12 @@ func (s *Session) onCloseOnce() {
 		return
 	}
 	s.onCloseCalled = true
-	fn := s.OnClose
+	listeners := s.onCloseListeners
 	s.mu.Unlock()
-	if fn != nil {
-		fn()
+	for _, fn := range listeners {
+		if fn != nil {
+			fn()
+		}
 	}
 }
 
@@ -96,6 +111,10 @@ func (s *Session) abort() {
 }
 
 // Start begins the read and write loops and returns immediately.
+func (s *Session) Context() context.Context {
+	return s.ctx
+}
+
 func (s *Session) Start() {
 	s.wg.Add(2)
 	go s.readLoop()
@@ -208,7 +227,12 @@ func (s *Session) writeLoop() {
 }
 
 // Send enqueues a raw FIX frame (already with checksum) to the send queue.
-func (s *Session) Send(b []byte) error {
+func (s *Session) Send(b []byte) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = io.ErrClosedPipe
+		}
+	}()
 	select {
 	case <-s.ctx.Done():
 		return io.ErrClosedPipe

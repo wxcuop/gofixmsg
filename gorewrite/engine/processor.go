@@ -64,6 +64,7 @@ func (p *Processor) RegisterWithFromApp(msgType string, sessionID string, fn fun
 func (p *Processor) Process(m *fixmsg.FixMessage) error {
 	// Validate message structure and dictionary if provided
 	if err := ValidateMessage(m, p.spec); err != nil {
+		fmt.Printf("PROCESSOR: Validation failed for MsgType %s: %v\n", m.FixFragment[35], err)
 		if p.app != nil {
 			p.app.OnReject(m, fmt.Sprintf("Validation failed: %v", err), "")
 		}

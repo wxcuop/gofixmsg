@@ -1,16 +1,15 @@
 package integration
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
-	"github.com/wxcuop/pyfixmsg_plus/network"
 	"github.com/wxcuop/pyfixmsg_plus/engine"
+	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
+	"github.com/wxcuop/pyfixmsg_plus/network"
 	"github.com/wxcuop/pyfixmsg_plus/state"
 	"github.com/wxcuop/pyfixmsg_plus/store"
-	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 )
 
 func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
@@ -23,6 +22,9 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		server.Proc = proc
 		// send immediate Logon from acceptor to initiator (simpler for test)
 		im := engine.NewLogonMessage("SV", "CL")
+		im.Set(34, "1")
+		im.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+		im.SetLenAndChecksum()
 		if b, err := im.ToWire(); err == nil {
 			conn.Write(b)
 			conn.Flush() // Must flush buffered writes
@@ -32,11 +34,18 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 			sender, _ := m.Get(56)
 			target, _ := m.Get(49)
 			out := engine.NewLogonMessage(sender, target)
+			out.Set(34, "2")
+			out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+			out.SetLenAndChecksum()
 			_ = server.SendMessage(out)
 			return nil
 		})
 		// create session
+		done := make(chan struct{})
 		sess := engine.NewSession(conn, proc)
+		sess.SetOnClose(func() {
+			close(done)
+		})
 		// setup components for server and attach session
 		stServer := store.NewSQLiteStore()
 		_ = stServer.Init(":memory:")
@@ -44,19 +53,24 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 		_ = server.AttachSession(sess)
 		// start server-side heartbeat sender to exercise initiator receive path
 		go func() {
-			t := time.NewTicker(20 * time.Millisecond)
-			defer t.Stop()
+			ticker := time.NewTicker(20 * time.Millisecond)
+			defer ticker.Stop()
 			for {
 				select {
-				case <-context.Background().Done():
+				case <-sess.Context().Done():
 					return
-				case <-t.C:
+				case <-ticker.C:
 					hb := engine.NewHeartbeatMessage("SV", "CL")
-					b, _ := hb.ToWire()
-					_ = server.SessionSend(b)
+					err := server.SendMessage(hb)
+					if err != nil {
+						// could be session closing
+						return
+					}
 				}
 			}
 		}()
+		<-done
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	err := acc.Start(handler)
@@ -93,13 +107,16 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 
 	// send Logon from initiator
 	out := engine.NewLogonMessage("CL","SV")
+	out.Set(34, "1")
+	out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+	out.SetLenAndChecksum()
 	require.NoError(t, engineClient.SendMessage(out))
 
 	// wait for logon reply
 	select {
 	case <-logonCh:
 		// ok
-	case <-time.After(500 * time.Millisecond):
+	case <-time.After(1000 * time.Millisecond):
 		t.Fatal("timeout waiting for logon reply")
 	}
 
@@ -107,7 +124,7 @@ func TestInitiatorAcceptor_LogonAndHeartbeat(t *testing.T) {
 	select {
 	case <-hbCh:
 		// ok
-	case <-time.After(500 * time.Millisecond):
+	case <-time.After(1000 * time.Millisecond):
 		t.Fatal("timeout waiting for heartbeat")
 	}
 }

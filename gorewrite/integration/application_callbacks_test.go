@@ -33,6 +33,9 @@ func TestApplicationCallbacks(t *testing.T) {
 
 		// Send Logon from acceptor to initiator
 		im := engine.NewLogonMessage("SV", "CL")
+		im.Set(34, "1")
+		im.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+		im.SetLenAndChecksum()
 		if b, err := im.ToWire(); err == nil {
 			conn.Write(b)
 			conn.Flush() // Must flush buffered writes
@@ -43,6 +46,9 @@ func TestApplicationCallbacks(t *testing.T) {
 			sender, _ := m.Get(56)
 			target, _ := m.Get(49)
 			out := engine.NewLogonMessage(sender, target)
+			out.Set(34, "2")
+			out.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+			out.SetLenAndChecksum()
 			_ = server.SendMessage(out)
 			return nil
 		})
@@ -57,17 +63,27 @@ func TestApplicationCallbacks(t *testing.T) {
 				35: "8", // ExecReport
 				49: sender,
 				56: target,
+				34: "3",
+				52: time.Now().UTC().Format("20060102-15:04:05.000"),
 			})
+			execReport.SetLenAndChecksum()
 			_ = server.SendMessage(execReport)
 			return nil
 		})
 
 		// Create session and setup server engine
+		done := make(chan struct{})
 		sess := engine.NewSession(conn, proc)
+		sess.SetOnClose(func() {
+			close(done)
+		})
 		stServer := store.NewSQLiteStore()
 		_ = stServer.Init(":memory:")
 		server.SetupComponents(state.NewStateMachine(), stServer)
 		_ = server.AttachSession(sess)
+		<-done
+		// give a bit of time for session to actually finish processing
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	err := acc.Start(handler)
@@ -107,6 +123,9 @@ func TestApplicationCallbacks(t *testing.T) {
 
 	// Send Logon (call ToAdmin before SendMessage)
 	logon := engine.NewLogonMessage("CL", "SV")
+	logon.Set(34, "1")
+	logon.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+	logon.SetLenAndChecksum()
 	if err := engineClient.App.ToAdmin(logon, sessionID); err != nil {
 		t.Fatalf("ToAdmin failed: %v", err)
 	}
@@ -126,7 +145,10 @@ func TestApplicationCallbacks(t *testing.T) {
 		35: "D", // NewOrderSingle
 		49: "CL",
 		56: "SV",
+		34: "2",
+		52: time.Now().UTC().Format("20060102-15:04:05.000"),
 	})
+	newOrder.SetLenAndChecksum()
 	t.Logf("Sending NewOrder, callOrder before: %v", *testApp.callOrder)
 	require.NoError(t, engineClient.SendMessage(newOrder))
 	t.Logf("Sent NewOrder, callOrder after: %v", *testApp.callOrder)
@@ -143,6 +165,9 @@ func TestApplicationCallbacks(t *testing.T) {
 
 	// Send Logout (call ToAdmin before SendMessage)
 	logout := engine.NewLogoutMessage("CL", "SV")
+	logout.Set(34, "3")
+	logout.Set(52, time.Now().UTC().Format("20060102-15:04:05.000"))
+	logout.SetLenAndChecksum()
 	if err := engineClient.App.ToAdmin(logout, sessionID); err != nil {
 		t.Fatalf("ToAdmin failed: %v", err)
 	}

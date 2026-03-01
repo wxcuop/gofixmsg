@@ -20,20 +20,23 @@ type FixTag struct {
 	Number int
 	Name   string
 	Type   string
-	Values map[string]string
+	Values map[string]string // Enum values
 }
 
 // MessageSpec describes the fields and repeating groups of one FIX message type.
 type MessageSpec struct {
-	Name    string
-	MsgType string
-	Groups  map[int]*GroupSpec
+	Name         string
+	MsgType      string
+	RequiredTags map[int]struct{}
+	Tags         map[int]struct{}
+	Groups       map[int]*GroupSpec
 }
 
 // GroupSpec describes a single repeating group within a message or nested group.
 type GroupSpec struct {
 	NumberTag    int
 	FirstTag     int
+	RequiredTags map[int]struct{}
 	Tags         map[int]struct{}
 	NestedGroups map[int]*GroupSpec
 }
@@ -98,14 +101,16 @@ type xmlComponent struct {
 }
 
 type xmlGroup struct {
-	Name   string        `xml:"name,attr"`
-	Fields []xmlFieldRef `xml:"field"`
-	Groups []xmlGroup    `xml:"group"`
-	Comps  []xmlCompRef  `xml:"component"`
+	Name     string        `xml:"name,attr"`
+	Required string        `xml:"required,attr"`
+	Fields   []xmlFieldRef `xml:"field"`
+	Groups   []xmlGroup    `xml:"group"`
+	Comps    []xmlCompRef  `xml:"component"`
 }
 
 type xmlFieldRef struct {
-	Name string `xml:"name,attr"`
+	Name     string `xml:"name,attr"`
+	Required string `xml:"required,attr"`
 }
 
 type xmlCompRef struct {
@@ -173,66 +178,90 @@ func buildSpec(raw *xmlFix) (*FixSpec, error) {
 	}
 	for _, m := range raw.Messages.Messages {
 		ms := &MessageSpec{
-			Name:    m.Name,
-			MsgType: m.MsgType,
-			Groups:  make(map[int]*GroupSpec),
+			Name:         m.Name,
+			MsgType:      m.MsgType,
+			RequiredTags: make(map[int]struct{}),
+			Tags:         make(map[int]struct{}),
+			Groups:       make(map[int]*GroupSpec),
 		}
-		collectGroups(m.Groups, m.Comps, compMap, nameToNum, ms.Groups)
+		collectFields(m.Fields, m.Groups, m.Comps, compMap, nameToNum, ms.Tags, ms.RequiredTags, ms.Groups)
 		s.MessagesByType[m.MsgType] = ms
 		s.MessagesByName[m.Name] = ms
 	}
 	return s, nil
 }
 
-func collectGroups(groups []xmlGroup, comps []xmlCompRef, compMap map[string]*xmlComponent, nameToNum map[string]int, dest map[int]*GroupSpec) {
-	for _, ref := range comps {
-		if c, ok := compMap[ref.Name]; ok {
-			collectGroups(c.Groups, c.Comps, compMap, nameToNum, dest)
+func collectFields(fields []xmlFieldRef, groups []xmlGroup, comps []xmlCompRef, compMap map[string]*xmlComponent, nameToNum map[string]int, destTags map[int]struct{}, destReq map[int]struct{}, destGroups map[int]*GroupSpec) {
+	for _, f := range fields {
+		if num, ok := nameToNum[f.Name]; ok {
+			destTags[num] = struct{}{}
+			if f.Required == "Y" {
+				destReq[num] = struct{}{}
+			}
 		}
 	}
 	for _, g := range groups {
-		num, ok := nameToNum[g.Name]
-		if !ok {
-			continue
+		if num, ok := nameToNum[g.Name]; ok {
+			destTags[num] = struct{}{}
+			if g.Required == "Y" {
+				destReq[num] = struct{}{}
+			}
+			destGroups[num] = buildGroupSpec(num, g, compMap, nameToNum)
 		}
-		dest[num] = buildGroupSpec(num, g, compMap, nameToNum)
+	}
+	for _, ref := range comps {
+		if c, ok := compMap[ref.Name]; ok {
+			collectFields(c.Fields, c.Groups, c.Comps, compMap, nameToNum, destTags, destReq, destGroups)
+		}
 	}
 }
 
 func buildGroupSpec(numberTag int, g xmlGroup, compMap map[string]*xmlComponent, nameToNum map[string]int) *GroupSpec {
 	gs := &GroupSpec{
 		NumberTag:    numberTag,
+		RequiredTags: make(map[int]struct{}),
 		Tags:         make(map[int]struct{}),
 		NestedGroups: make(map[int]*GroupSpec),
 	}
-	allFields := expandFields(g.Fields, g.Comps, compMap)
-	for i, ref := range allFields {
-		tn, ok := nameToNum[ref.Name]
-		if !ok {
-			continue
-		}
-		if i == 0 {
-			gs.FirstTag = tn
-		}
-		gs.Tags[tn] = struct{}{}
-	}
-	for _, nested := range g.Groups {
-		nt, ok := nameToNum[nested.Name]
-		if !ok {
-			continue
-		}
-		gs.Tags[nt] = struct{}{}
-		gs.NestedGroups[nt] = buildGroupSpec(nt, nested, compMap, nameToNum)
-	}
+	
+	// Expanding group is slightly different as it has its own scope for fields
+	populateGroupSpec(gs, g.Fields, g.Groups, g.Comps, compMap, nameToNum)
+	
 	return gs
 }
 
-func expandFields(fields []xmlFieldRef, comps []xmlCompRef, compMap map[string]*xmlComponent) []xmlFieldRef {
-	result := append([]xmlFieldRef{}, fields...)
-	for _, ref := range comps {
-		if c, ok := compMap[ref.Name]; ok {
-			result = append(result, expandFields(c.Fields, c.Comps, compMap)...)
+func populateGroupSpec(gs *GroupSpec, fields []xmlFieldRef, groups []xmlGroup, comps []xmlCompRef, compMap map[string]*xmlComponent, nameToNum map[string]int) {
+	// The first field in the XML defines the FirstTag
+	firstSet := false
+	
+	for _, f := range fields {
+		if num, ok := nameToNum[f.Name]; ok {
+			gs.Tags[num] = struct{}{}
+			if f.Required == "Y" {
+				gs.RequiredTags[num] = struct{}{}
+			}
+			if !firstSet {
+				gs.FirstTag = num
+				firstSet = true
+			}
 		}
 	}
-	return result
+	for _, g := range groups {
+		if num, ok := nameToNum[g.Name]; ok {
+			gs.Tags[num] = struct{}{}
+			if g.Required == "Y" {
+				gs.RequiredTags[num] = struct{}{}
+			}
+			gs.NestedGroups[num] = buildGroupSpec(num, g, compMap, nameToNum)
+			if !firstSet {
+				gs.FirstTag = num
+				firstSet = true
+			}
+		}
+	}
+	for _, ref := range comps {
+		if c, ok := compMap[ref.Name]; ok {
+			populateGroupSpec(gs, c.Fields, c.Groups, c.Comps, compMap, nameToNum)
+		}
+	}
 }
