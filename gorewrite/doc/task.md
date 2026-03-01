@@ -174,9 +174,6 @@
 - [ ] 3 new tests for FIX dictionary validation (Phase 24)
 - [ ] 3 new tests for multi-session support (Phase 25)
 - [ ] 3 new tests for package reorganization (Phase 26)
-- [ ] 3 new tests for hardened `ResendRequest` (Phase 21)
-- [ ] 3 new tests for dictionary validation (Phase 24)
-- [ ] 1+ integration tests for multi-session (Phase 25)
 
 ---
 
