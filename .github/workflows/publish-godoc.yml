@@ -27,7 +27,7 @@ jobs:
           go-version: '1.21'
 
       - name: Install doc2go
-        run: go install github.com/abhinav/doc2go@latest
+        run: go install go.abhg.dev/doc2go@latest
 
       - name: Generate docs with doc2go
         run: |
