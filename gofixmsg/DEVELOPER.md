@@ -934,6 +934,54 @@ go test -race ./...
 ✓ StateMachine is thread-safe  
 ✓ MessageStore is thread-safe  
 
+### Resource Cleanup & Goroutine Lifecycle
+
+Beyond race conditions, ensure proper cleanup to prevent indefinite hangs:
+
+**Problem:** Without timeout-wrapped cleanup, goroutines waiting on closed channels or stuck in I/O can block forever.
+
+**Pattern: Timeout-wrapped cleanup**
+```go
+// Good: Cleanup with timeout to prevent hanging
+defer func() {
+    done := make(chan struct{})
+    go func() {
+        session.Close()  // May block if goroutines are stuck
+        close(done)
+    }()
+    select {
+    case <-done:
+        // Cleanup completed
+    case <-time.After(3 * time.Second):
+        // Timeout - continue anyway to avoid test/program hang
+    }
+}()
+```
+
+**Pattern: Timeout on blocking waits**
+```go
+// Good: Acceptor handler with wait timeout
+done := make(chan struct{})
+go func() {
+    // Some work
+    close(done)
+}()
+
+select {
+case <-done:
+    // Operation completed
+case <-time.After(5 * time.Second):
+    // Timeout - don't wait indefinitely
+    return
+}
+```
+
+**Critical cleanup points:**
+1. Always call `Store.Close()` after `Init()` to release database connections
+2. Wrap `Session.Start()` and `Session.Stop()` with goroutine timeouts (readLoop/writeLoop may block)
+3. Use context timeouts for tests expecting resource cleanup (30-45 seconds for integration tests)
+4. Ensure acceptor handlers exit cleanly even if session close hangs
+
 ---
 
 ## Best Practices

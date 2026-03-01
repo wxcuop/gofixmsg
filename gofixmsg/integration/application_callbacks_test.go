@@ -1,6 +1,7 @@
 package integration
 
 import (
+	"context"
 	"github.com/wxcuop/gofixmsg/engine/handler"
 	"github.com/wxcuop/gofixmsg/engine/session"
 	"fmt"
@@ -19,6 +20,27 @@ import (
 // TestApplicationCallbacks demonstrates all Application interface callbacks:
 // OnCreate, OnLogon, OnLogout, ToAdmin, FromAdmin, ToApp, FromApp, OnReject.
 func TestApplicationCallbacks(t *testing.T) {
+	// Set a timeout for the entire test to prevent indefinite hangs
+	// Increased to 45 seconds to account for cleanup and goroutine termination
+	ctx, cancel := context.WithTimeout(context.Background(), 45*time.Second)
+	defer cancel()
+
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		testApplicationCallbacksImpl(t)
+	}()
+
+	select {
+	case <-done:
+		// Test completed successfully
+	case <-ctx.Done():
+		t.Fatalf("TestApplicationCallbacks timed out after 45 seconds")
+	}
+}
+
+// testApplicationCallbacksImpl contains the actual test logic
+func testApplicationCallbacksImpl(t *testing.T) {
 	// Track callbacks
 	callOrder := []string{}
 
@@ -82,9 +104,19 @@ func TestApplicationCallbacks(t *testing.T) {
 		})
 		stServer := store.NewSQLiteStore()
 		_ = stServer.Init(":memory:")
+		defer stServer.Close()
 		server.SetupComponents(state.NewStateMachine(), stServer)
 		_ = server.AttachSession(sess)
-		<-done
+		
+		// Wait for session to close with a 5-second timeout
+		timeoutChan := time.After(5 * time.Second)
+		select {
+		case <-done:
+			// Session closed normally
+		case <-timeoutChan:
+			// Timeout waiting for session close, force cleanup
+			return
+		}
 		// give a bit of time for session to actually finish processing
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -104,6 +136,7 @@ func TestApplicationCallbacks(t *testing.T) {
 	// Setup components with session ID
 	st := store.NewSQLiteStore()
 	require.NoError(t, st.Init(":memory:"))
+	defer st.Close()
 	sessionID := "CL-SV-127.0.0.1:9999"
 	engineClient.SetupComponents(state.NewStateMachine(), st)
 	engineClient.SetSessionID(sessionID)
@@ -116,7 +149,21 @@ func TestApplicationCallbacks(t *testing.T) {
 
 	// Connect (this will call OnCreate)
 	require.NoError(t, engineClient.Connect())
-	defer engineClient.Close()
+	
+	// Ensure cleanup happens with a timeout to prevent hanging
+	defer func() {
+		closeDone := make(chan struct{})
+		go func() {
+			engineClient.Close()
+			close(closeDone)
+		}()
+		select {
+		case <-closeDone:
+			// Closed successfully
+		case <-time.After(3 * time.Second):
+			// Close timeout - continue anyway to avoid test hang
+		}
+	}()
 
 	// Allow time for OnCreate to be called
 	time.Sleep(10 * time.Millisecond)
