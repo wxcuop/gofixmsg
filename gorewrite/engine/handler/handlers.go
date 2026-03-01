@@ -20,6 +20,7 @@ type Application interface {
 	FromAdmin(msg *fixmsg.FixMessage, sessionID string) error
 	ToApp(msg *fixmsg.FixMessage, sessionID string) error
 	FromApp(msg *fixmsg.FixMessage, sessionID string) error
+	OnMessage(msg *fixmsg.FixMessage, sessionID string)
 	OnReject(msg *fixmsg.FixMessage, reason string, sessionID string)
 }
 

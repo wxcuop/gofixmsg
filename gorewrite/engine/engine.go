@@ -15,6 +15,7 @@ import (
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/heartbeat"
 	"github.com/wxcuop/pyfixmsg_plus/network"
+	"github.com/wxcuop/pyfixmsg_plus/scheduler"
 	"github.com/wxcuop/pyfixmsg_plus/state"
 	"github.com/wxcuop/pyfixmsg_plus/store"
 )
@@ -47,6 +48,8 @@ type FixEngine struct {
 	App Application
 	// session ID for callbacks
 	sessionID string
+	// scheduler for config-driven actions
+	Scheduler *scheduler.RuntimeScheduler
 }
 
 func (e *FixEngine) SessionSend(b []byte) error {
@@ -141,6 +144,17 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	e.heartbeatInterval = time.Duration(intervalSec) * time.Second
 	ctx := &handler.HandlerContext{SM: sm, Store: st, Engine: e}
 	handler.RegisterDefaultHandlers(e.Proc, ctx)
+	
+	// Initialize scheduler and wire actions
+	e.Scheduler = scheduler.NewRuntimeScheduler()
+	e.wireSchedulerActions()
+	
+	// Load scheduler configuration
+	if mgr != nil {
+		if err := e.Scheduler.Load(mgr); err != nil {
+			fmt.Printf("warning: failed to load scheduler config: %v\n", err)
+		}
+	}
 	// Note: OnCreate callback should be called after session is attached, not here
 }
 
@@ -373,4 +387,62 @@ func newSequenceResetMessage(sender, target string, newSeq int, gapFill bool) *f
 	}
 	m.SetLenAndChecksum()
 	return m
+}
+
+// wireSchedulerActions registers scheduler action handlers to engine methods
+func (e *FixEngine) wireSchedulerActions() {
+	if e.Scheduler == nil {
+		return
+	}
+
+	// start: Connect to FIX peer
+	e.Scheduler.RegisterAction("start", func() {
+		if err := e.Connect(); err != nil {
+			fmt.Printf("scheduler: error connecting: %v\n", err)
+		}
+	})
+
+	// stop/logout: Logout and close connection
+	e.Scheduler.RegisterAction("stop/logout", func() {
+		if err := e.Close(); err != nil {
+			fmt.Printf("scheduler: error closing: %v\n", err)
+		}
+	})
+
+	// reset: Reset sequence numbers
+	e.Scheduler.RegisterAction("reset", func() {
+		if e.SeqMgr != nil {
+			e.SeqMgr.SetIncoming(1)
+			if err := e.SeqMgr.SetOutgoing(1); err != nil {
+				fmt.Printf("scheduler: error resetting sequence: %v\n", err)
+			}
+		}
+	})
+
+	// reset_start: Reset sequence and connect
+	e.Scheduler.RegisterAction("reset_start", func() {
+		if e.SeqMgr != nil {
+			e.SeqMgr.SetIncoming(1)
+			if err := e.SeqMgr.SetOutgoing(1); err != nil {
+				fmt.Printf("scheduler: error resetting sequence: %v\n", err)
+			}
+		}
+		if err := e.Connect(); err != nil {
+			fmt.Printf("scheduler: error connecting after reset: %v\n", err)
+		}
+	})
+}
+
+// StartScheduler begins the runtime scheduler
+func (e *FixEngine) StartScheduler() {
+	if e.Scheduler != nil {
+		e.Scheduler.Start()
+	}
+}
+
+// StopScheduler halts the runtime scheduler
+func (e *FixEngine) StopScheduler() {
+	if e.Scheduler != nil {
+		e.Scheduler.Stop()
+	}
 }
