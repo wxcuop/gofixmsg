@@ -32,7 +32,8 @@ jobs:
       - name: Generate docs with doc2go
         run: |
           mkdir -p out
-          doc2go -out ./out ./gofixmsg
+          cd gofixmsg
+          doc2go -out ../out .
 
       - name: Upload docs artifact
         uses: actions/upload-artifact@v4
