@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"net"
 	"strconv"
@@ -47,6 +48,8 @@ type FixEngine struct {
 	App Application
 	// session ID for callbacks
 	sessionID string
+	// logger for engine operations
+	Logger *slog.Logger
 }
 
 func (e *FixEngine) SessionSend(b []byte) error {
@@ -64,7 +67,10 @@ func (e *FixEngine) SessionSend(b []byte) error {
 func NewFixEngine(init *network.Initiator) *FixEngine {
 	// seed random for jitter
 	rand.Seed(time.Now().UnixNano())
-	fe := &FixEngine{Initiator: init}
+	fe := &FixEngine{
+		Initiator: init,
+		Logger:    slog.Default(),
+	}
 	// default reconnect parameters
 	fe.reconnectInitial = 1 * time.Second
 	fe.reconnectMax = 30 * time.Second
@@ -82,6 +88,7 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	if e.Proc == nil {
 		e.Proc = handler.NewProcessor()
 	}
+	e.Proc.SetLogger(e.Logger)
 	// set application on processor for FromApp callbacks
 	e.Proc.SetApplication(e.App)
 	// create sequence manager with a session id derived from initiator address if present
@@ -121,7 +128,7 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 		if certFile != "" {
 			tlsCfg, err := network.LoadTLSConfig(certFile, keyFile, caFile)
 			if err != nil {
-				fmt.Printf("warning: failed to load TLS config: %v\n", err)
+				e.Logger.Warn("failed to load TLS config", "error", err, "certFile", certFile)
 			} else if tlsCfg != nil {
 				// Apply TLS config to Initiator if present
 				if e.Initiator != nil {
@@ -210,7 +217,12 @@ func (e *FixEngine) startReconnectLoop() {
 				// attach new session
 				e.Conn = c
 				s := session.NewSession(c, e.Proc)
-				_ = e.AttachSession(s)
+				if err := e.AttachSession(s); err != nil {
+					e.Logger.Error("failed to attach session after reconnect", "error", err)
+					c.Close()
+					// continue trying if attachment fails for some reason
+					continue
+				}
 				// stop reconnect loop
 				e.reconnectMu.Lock()
 				if e.reconnectCancel != nil {
@@ -343,6 +355,13 @@ func (e *FixEngine) GetSessionID() string {
 // GetSeqMgr returns the sequence manager.
 func (e *FixEngine) GetSeqMgr() handler.SeqMgrI {
 	return e.SeqMgr
+}
+
+func (e *FixEngine) GetLogger() *slog.Logger {
+	if e.Logger == nil {
+		return slog.Default()
+	}
+	return e.Logger
 }
 
 // Helper functions for creating FIX messages

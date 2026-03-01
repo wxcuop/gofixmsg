@@ -89,9 +89,8 @@ func (h *HeartbeatMonitor) Start(ctx context.Context) {
 						})
 						tr.SetLenAndChecksum()
 						if h.engine != nil {
-							_, err := tr.ToWire()
-							if err == nil {
-								_ = h.engine.SendMessage(tr)
+							if err := h.engine.SendMessage(tr); err != nil {
+								h.engine.Logger.Error("failed to send test request", "error", err)
 							}
 						}
 						h.mu.Lock()

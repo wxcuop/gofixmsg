@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"time"
 
@@ -31,15 +32,16 @@ type EngineI interface {
 	GetApp() Application
 	GetSessionID() string
 	GetSeqMgr() SeqMgrI
+	GetLogger() *slog.Logger
 }
 
 // SeqMgrI defines the interface for sequence manager.
 type SeqMgrI interface {
 	Incoming() int
 	Outgoing() int
-	SetIncoming(int)
+	SetIncoming(int) error
 	SetOutgoing(int) error
-	IncrementIncoming() int
+	IncrementIncoming() (int, error)
 	IncrementOutgoing() (int, error)
 }
 
@@ -75,11 +77,17 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 		// If ResetSeqNumFlag=Y reset seq nums to 1
 		if v, _ := m.Get(141); v == "Y" {
 			if ctx.Engine != nil && ctx.Store != nil {
-				_ = ctx.Engine.GetSeqMgr().SetOutgoing(1)
+				if err := ctx.Engine.GetSeqMgr().SetOutgoing(1); err != nil {
+					ctx.Engine.GetLogger().Error("failed to reset outgoing seq num", "error", err)
+				}
 				ctx.Engine.GetSeqMgr().SetIncoming(1)
 			}
 		}
-		_, _ = ctx.SM.OnEvent("logon_received")
+		if _, err := ctx.SM.OnEvent("logon_received"); err != nil {
+			if ctx.Engine != nil {
+				ctx.Engine.GetLogger().Error("state machine error", "event", "logon_received", "error", err)
+			}
+		}
 		// Call OnLogon callback
 		if ctx.Engine != nil && ctx.Engine.GetApp() != nil {
 			ctx.Engine.GetApp().OnLogon(ctx.Engine.GetSessionID())
@@ -111,9 +119,15 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 					return err
 				}
 			}
-			_ = ctx.Engine.SendMessage(out)
+			if err := ctx.Engine.SendMessage(out); err != nil {
+				ctx.Engine.GetLogger().Error("failed to send logout reply", "error", err)
+			}
 		}
-		_, _ = ctx.SM.OnEvent("logout_received")
+		if _, err := ctx.SM.OnEvent("logout_received"); err != nil {
+			if ctx.Engine != nil {
+				ctx.Engine.GetLogger().Error("state machine error", "event", "logout_received", "error", err)
+			}
+		}
 		// Call OnLogout callback
 		if ctx.Engine != nil && ctx.Engine.GetApp() != nil {
 			ctx.Engine.GetApp().OnLogout(ctx.Engine.GetSessionID())
@@ -175,8 +189,12 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 							}
 						}
 						if ctx.Engine != nil {
-							b, _ := sr.ToWire()
-							_ = ctx.Engine.SessionSend(b)
+							b, err := sr.ToWire()
+							if err != nil {
+								ctx.Engine.GetLogger().Error("failed to serialize sequence reset during resend", "error", err)
+							} else if err := ctx.Engine.SessionSend(b); err != nil {
+								ctx.Engine.GetLogger().Error("failed to send sequence reset during resend", "error", err)
+							}
 						}
 						continue
 					}
@@ -194,18 +212,28 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 					if ctx.Engine != nil {
 						b, err := parsedMsg.ToWire()
 						if err == nil {
-							_ = ctx.Engine.SessionSend(b)
+							if err := ctx.Engine.SessionSend(b); err != nil {
+								ctx.Engine.GetLogger().Error("failed to send replayed message", "error", err, "seqNum", seq)
+							}
+						} else {
+							ctx.Engine.GetLogger().Error("failed to serialize message during resend", "error", err, "seqNum", seq)
 						}
 					}
 				} else {
-					fmt.Println("Parse error:", parseErr)
+					if ctx.Engine != nil {
+						ctx.Engine.GetLogger().Error("failed to parse message during resend", "error", parseErr, "seqNum", seq)
+					}
 					// Fallback to GapFill if parsing fails
 					sr := NewSequenceResetMessage(target, sender, seq+1, true)
 					sr.Set(34, strconv.Itoa(seq))
 					sr.Set(43, "Y")
 					if ctx.Engine != nil {
-						b, _ := sr.ToWire()
-						_ = ctx.Engine.SessionSend(b)
+						b, err := sr.ToWire()
+						if err != nil {
+							ctx.Engine.GetLogger().Error("failed to serialize fallback gapfill during resend", "error", err)
+						} else if err := ctx.Engine.SessionSend(b); err != nil {
+							ctx.Engine.GetLogger().Error("failed to send fallback gapfill during resend", "error", err)
+						}
 					}
 				}
 			} else {
@@ -224,8 +252,12 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 					}
 				}
 				if ctx.Engine != nil {
-					b, _ := sr.ToWire()
-					_ = ctx.Engine.SessionSend(b)
+					b, err := sr.ToWire()
+					if err != nil {
+						ctx.Engine.GetLogger().Error("failed to serialize gapfill during resend", "error", err)
+					} else if err := ctx.Engine.SessionSend(b); err != nil {
+						ctx.Engine.GetLogger().Error("failed to send gapfill during resend", "error", err)
+					}
 				}
 			}
 		}
@@ -247,7 +279,9 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 		if v, _ := m.Get(36); v != "" {
 			n, _ := strconv.Atoi(v)
 			if ctx.Engine != nil && ctx.Engine.GetSeqMgr() != nil {
-				_ = ctx.Engine.GetSeqMgr().SetOutgoing(n - 1)
+				if err := ctx.Engine.GetSeqMgr().SetOutgoing(n - 1); err != nil {
+					ctx.Engine.GetLogger().Error("failed to set outgoing seq num from sequence reset", "error", err)
+				}
 			}
 		}
 		return nil
@@ -282,7 +316,9 @@ func RegisterDefaultHandlers(p *Processor, ctx *HandlerContext) {
 			}
 		}
 		if ctx.Engine != nil {
-			_ = ctx.Engine.SendMessage(hb)
+			if err := ctx.Engine.SendMessage(hb); err != nil {
+				ctx.Engine.GetLogger().Error("failed to send heartbeat response to test request", "error", err)
+			}
 		}
 		return nil
 	})

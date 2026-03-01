@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log/slog"
 	"net"
 	"strconv"
 	"testing"
@@ -53,6 +54,7 @@ type DummyConn struct {
 	net.Conn
 	written [][]byte
 }
+
 func (d *DummyConn) Write(b []byte) (n int, err error) {
 	cpy := make([]byte, len(b))
 	copy(cpy, b)
@@ -65,22 +67,68 @@ func (d *DummyConn) Read(b []byte) (n int, err error) {
 	time.Sleep(10 * time.Millisecond)
 	return 0, net.ErrClosed
 }
-func (d *DummyConn) SetReadDeadline(t time.Time) error { return nil }
+func (d *DummyConn) SetReadDeadline(t time.Time) error  { return nil }
 func (d *DummyConn) SetWriteDeadline(t time.Time) error { return nil }
+
+type testSeqMgr struct {
+	in  int
+	out int
+}
+
+func (s *testSeqMgr) Incoming() int                           { return s.in }
+func (s *testSeqMgr) Outgoing() int                           { return s.out }
+func (s *testSeqMgr) SetIncoming(n int) error                 { s.in = n; return nil }
+func (s *testSeqMgr) SetOutgoing(n int) error                 { s.out = n; return nil }
+func (s *testSeqMgr) IncrementIncoming() (int, error)          { s.in++; return s.in, nil }
+func (s *testSeqMgr) IncrementOutgoing() (int, error)         { s.out++; return s.out, nil }
+
+type testEngine struct {
+	SeqMgr    *testSeqMgr
+	conn      *DummyConn
+	sessionID string
+	app       Application
+	logger    *slog.Logger
+}
+
+func (e *testEngine) SendMessage(m *fixmsg.FixMessage) error {
+	b, err := m.ToWire()
+	if err != nil {
+		return err
+	}
+	return e.SessionSend(b)
+}
+
+func (e *testEngine) SessionSend(b []byte) error {
+	if e.conn == nil {
+		return nil
+	}
+	_, err := e.conn.Write(b)
+	return err
+}
+
+func (e *testEngine) GetApp() Application  { return e.app }
+func (e *testEngine) GetSessionID() string { return e.sessionID }
+func (e *testEngine) GetSeqMgr() SeqMgrI {
+	if e.SeqMgr == nil {
+		e.SeqMgr = &testSeqMgr{}
+	}
+	return e.SeqMgr
+}
+func (e *testEngine) GetLogger() *slog.Logger {
+	if e.logger == nil {
+		return slog.Default()
+	}
+	return e.logger
+}
 
 func TestResendRequestHandler_Hardening(t *testing.T) {
 	mockStore := NewMockStore()
 	sm := state.NewStateMachine()
-	
-	fe := NewFixEngine(nil)
-	fe.SeqMgr = NewSeqManager(mockStore, "session1")
-	
+
+	fe := &testEngine{SeqMgr: &testSeqMgr{}, sessionID: "session1"}
+
 	conn := &DummyConn{}
-	// Setup session
-	fe.Session = NewSession(conn, NewProcessor())
-	// Start session so it can process sendCh -> Write
-	fe.Session.Start()
-	defer fe.Session.Stop()
+	fe.conn = conn
 
 	ctx := &HandlerContext{
 		SM:     sm,
@@ -113,25 +161,21 @@ func TestResendRequestHandler_Hardening(t *testing.T) {
 
 	// Construct incoming ResendRequest (seqs 1 to 4)
 	rrMsg := fixmsg.NewFixMessageFromMap(map[int]string{
-		8: "FIX.4.4",
-		35: "2",
-		49: "SENDER", // the peer asking us
-		56: "TARGET", // us
-		34: "100",
-		52: origTime,
-		7: "1", // begin seq no
-		16: "4", // end seq no
+		8:   "FIX.4.4",
+		35:  "2",
+		49:  "SENDER", // the peer asking us
+		56:  "TARGET", // us
+		34:  "100",
+		52:  origTime,
+		7:   "1", // begin seq no
+		16:  "4", // end seq no
 	})
 	rrMsg.SetLenAndChecksum()
 
 	err := proc.Process(rrMsg)
 	assert.NoError(t, err)
 
-	// Wait briefly for writeLoop to drain sendCh
-	time.Sleep(100 * time.Millisecond)
-
 	assert.Equal(t, 4, len(conn.written), "Should have sent 4 messages in response")
-
 
 	// Verify msg 1: Should be SequenceReset (GapFill) for seq 1 because it's an admin message
 	msg1 := fixmsg.NewFixMessage()
@@ -185,13 +229,12 @@ func TestResendRequestHandler_Hardening(t *testing.T) {
 func TestLogonHandler_ResetSeqNumFlag(t *testing.T) {
 	mockStore := NewMockStore()
 	sm := state.NewStateMachine()
-	
-	fe := NewFixEngine(nil)
-	fe.SeqMgr = NewSeqManager(mockStore, "session1")
+
+	fe := &testEngine{SeqMgr: &testSeqMgr{}, sessionID: "session1"}
 	// simulate sequence numbers advanced
 	_ = fe.SeqMgr.SetOutgoing(100)
-	fe.SeqMgr.SetIncoming(100)
-	
+	_ = fe.SeqMgr.SetIncoming(100)
+
 	ctx := &HandlerContext{
 		SM:     sm,
 		Store:  mockStore,
@@ -203,12 +246,12 @@ func TestLogonHandler_ResetSeqNumFlag(t *testing.T) {
 
 	// Send Logon with ResetSeqNumFlag=Y
 	logonMsg := fixmsg.NewFixMessageFromMap(map[int]string{
-		8: "FIX.4.4",
-		35: "A",
-		49: "SENDER",
-		56: "TARGET",
-		34: "1",
-		52: time.Now().UTC().Format("20060102-15:04:05.000"),
+		8:   "FIX.4.4",
+		35:  "A",
+		49:  "SENDER",
+		56:  "TARGET",
+		34:  "1",
+		52:  time.Now().UTC().Format("20060102-15:04:05.000"),
 		141: "Y",
 	})
 	logonMsg.SetLenAndChecksum()
@@ -225,14 +268,11 @@ func TestLogonHandler_ResetSeqNumFlag(t *testing.T) {
 func TestResendRequestHandler_EndSeqNoZero(t *testing.T) {
 	mockStore := NewMockStore()
 	sm := state.NewStateMachine()
-	fe := NewFixEngine(nil)
-	fe.SeqMgr = NewSeqManager(mockStore, "session1")
+	fe := &testEngine{SeqMgr: &testSeqMgr{}, sessionID: "session1"}
 	_ = fe.SeqMgr.SetOutgoing(10) // Current outgoing is 10
 
 	conn := &DummyConn{}
-	fe.Session = NewSession(conn, NewProcessor())
-	fe.Session.Start()
-	defer fe.Session.Stop()
+	fe.conn = conn
 
 	ctx := &HandlerContext{SM: sm, Store: mockStore, Engine: fe}
 	proc := NewProcessor()
@@ -248,7 +288,6 @@ func TestResendRequestHandler_EndSeqNoZero(t *testing.T) {
 	err := proc.Process(rrMsg)
 	assert.NoError(t, err)
 
-	time.Sleep(50 * time.Millisecond)
 	// Outgoing was 10, so messages 5,6,7,8,9,10 should be replayed (or gap-filled)
 	// In our mock store they are missing, so 6 messages should be sent.
 	assert.Equal(t, 6, len(conn.written), "Should have replayed 6 messages (5 to 10)")
@@ -257,10 +296,9 @@ func TestResendRequestHandler_EndSeqNoZero(t *testing.T) {
 func TestLogonHandler_ResetSeqNumFlagNo(t *testing.T) {
 	mockStore := NewMockStore()
 	sm := state.NewStateMachine()
-	fe := NewFixEngine(nil)
-	fe.SeqMgr = NewSeqManager(mockStore, "session1")
+	fe := &testEngine{SeqMgr: &testSeqMgr{}, sessionID: "session1"}
 	_ = fe.SeqMgr.SetOutgoing(100)
-	fe.SeqMgr.SetIncoming(100)
+	_ = fe.SeqMgr.SetIncoming(100)
 
 	ctx := &HandlerContext{SM: sm, Store: mockStore, Engine: fe}
 	proc := NewProcessor()

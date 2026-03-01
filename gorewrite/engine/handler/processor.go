@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log/slog"
 
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg/spec"
@@ -9,13 +10,26 @@ import (
 
 // Processor dispatches by MsgType to registered handlers.
 type Processor struct {
-	h    map[string]func(*fixmsg.FixMessage) error
-	app  Application
-	spec *spec.FixSpec
+	h          map[string]func(*fixmsg.FixMessage) error
+	app        Application
+	spec       *spec.FixSpec
 	validateFn func(*fixmsg.FixMessage, *spec.FixSpec) error
+	logger     *slog.Logger
 }
 
-func NewProcessor() *Processor { return &Processor{h: make(map[string]func(*fixmsg.FixMessage) error)} }
+func (p *Processor) getLogger() *slog.Logger {
+	if p.logger == nil {
+		return slog.Default()
+	}
+	return p.logger
+}
+
+func NewProcessor() *Processor {
+	return &Processor{
+		h:      make(map[string]func(*fixmsg.FixMessage) error),
+		logger: slog.Default(),
+	}
+}
 
 // SetApplication sets the application for FromApp callbacks.
 func (p *Processor) SetApplication(app Application) {
@@ -30,6 +44,13 @@ func (p *Processor) SetSpec(s *spec.FixSpec) {
 // SetValidateFunc sets the validation function
 func (p *Processor) SetValidateFunc(fn func(*fixmsg.FixMessage, *spec.FixSpec) error) {
 	p.validateFn = fn
+}
+
+// SetLogger sets the logger for the processor.
+func (p *Processor) SetLogger(l *slog.Logger) {
+	if l != nil {
+		p.logger = l
+	}
 }
 
 func (p *Processor) Register(msgType string, fn func(*fixmsg.FixMessage) error) {
@@ -74,7 +95,7 @@ func (p *Processor) Process(m *fixmsg.FixMessage) error {
 		validateErr = p.validateFn(m, p.spec)
 	}
 	if validateErr != nil {
-		fmt.Printf("PROCESSOR: Validation failed for MsgType %s: %v\n", m.FixFragment[35], validateErr)
+		p.getLogger().Error("validation failed", "msgType", m.FixFragment[35], "error", validateErr)
 		if p.app != nil {
 			p.app.OnReject(m, fmt.Sprintf("Validation failed: %v", validateErr), "")
 		}

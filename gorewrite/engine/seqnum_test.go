@@ -18,7 +18,8 @@ func TestSeqManager_Basic(t *testing.T) {
 	v, err := m.IncrementOutgoing()
 	require.NoError(t, err)
 	require.Equal(t, 1, v)
-	v2 := m.IncrementIncoming()
+	v2, err := m.IncrementIncoming()
+	require.NoError(t, err)
 	require.Equal(t, 1, v2)
 
 	// set outgoing and persist
@@ -36,7 +37,7 @@ func TestSeqManager_Persistence(t *testing.T) {
 	
 	// Advance sequences
 	require.NoError(t, m.SetOutgoing(100))
-	m.SetIncoming(50)
+	require.NoError(t, m.SetIncoming(50))
 	
 	// Re-load SeqManager with same store and session ID
 	m2 := engine.NewSeqManager(st, sid)
@@ -46,7 +47,7 @@ func TestSeqManager_Persistence(t *testing.T) {
 	// Increment and verify
 	v, _ := m2.IncrementOutgoing()
 	require.Equal(t, 101, v)
-	v2 := m2.IncrementIncoming()
+	v2, _ := m2.IncrementIncoming()
 	require.Equal(t, 51, v2)
 	
 	// Re-load again

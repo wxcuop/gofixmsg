@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"sync"
 	"time"
@@ -35,6 +36,15 @@ type Session struct {
 	OnClose func()
 	// internal flag to ensure OnClose is called only once
 	onCloseCalled bool
+	// logger for session operations
+	Logger *slog.Logger
+}
+
+func (s *Session) getLogger() *slog.Logger {
+	if s.Logger == nil {
+		return slog.Default()
+	}
+	return s.Logger
 }
 
 func (s *Session) SetOnMessage(fn func(*fixmsg.FixMessage)) {
@@ -48,7 +58,14 @@ func (s *Session) SetOnClose(fn func()) {
 
 func NewSession(conn net.Conn, p ProcessorIface) *Session {
 	ctx, cancel := context.WithCancel(context.Background())
-	return &Session{Conn: conn, Processor: p, ctx: ctx, cancel: cancel, sendCh: make(chan []byte, 128)}
+	return &Session{
+		Conn:      conn,
+		Processor: p,
+		ctx:       ctx,
+		cancel:    cancel,
+		sendCh:    make(chan []byte, 128),
+		Logger:    slog.Default(),
+	}
 }
 
 // onCloseOnce invokes the OnClose callback at most once.
@@ -145,7 +162,9 @@ func (s *Session) readLoop() {
 			return
 		default:
 		}
-		_ = s.Conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+		if err := s.Conn.SetReadDeadline(time.Now().Add(30 * time.Second)); err != nil {
+			s.getLogger().Warn("failed to set read deadline", "error", err)
+		}
 		n, err := s.Conn.Read(tmp)
 		if n > 0 {
 			buf = append(buf, tmp[:n]...)
@@ -163,13 +182,15 @@ func (s *Session) readLoop() {
 				// let codec parse and hand to processor
 				msg, err := codec.New(nil).Parse(frame)
 				if err != nil {
-					// parsing failed; ignore or log in real implementation
+					s.getLogger().Error("failed to parse inbound frame", "error", err, "frame", string(frame))
 					continue
 				}
 				if s.OnMessage != nil {
 					s.OnMessage(msg)
-				} else {
-					_ = s.Processor.Process(msg)
+				} else if s.Processor != nil {
+					if err := s.Processor.Process(msg); err != nil {
+						s.getLogger().Error("processor failed to handle message", "error", err)
+					}
 				}
 			}
 		}
@@ -198,7 +219,9 @@ func (s *Session) writeLoop() {
 			if !ok {
 				return
 			}
-			_ = s.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+			if err := s.Conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+				s.getLogger().Warn("failed to set write deadline", "error", err)
+			}
 			_, err := s.Conn.Write(b)
 			if err != nil {
 				_ = s.Conn.Close()

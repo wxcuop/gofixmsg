@@ -16,13 +16,18 @@ func (e *FixEngine) AttachSession(s *session.Session) error {
 		return fmt.Errorf("nil session")
 	}
 	e.Session = s
+	if e.Logger != nil {
+		s.Logger = e.Logger
+	}
 	// Call OnCreate callback
 	if e.App != nil {
 		e.App.OnCreate(e.sessionID)
 	}
 	// wire inbound message handling to engine and monitor
 	s.SetOnMessage(func(m *fixmsg.FixMessage) {
-		_ = e.HandleIncoming(m)
+		if err := e.HandleIncoming(m); err != nil {
+			e.Logger.Error("failed to handle incoming message", "error", err)
+		}
 		if e.Monitor != nil {
 			e.Monitor.Seen()
 		}
@@ -68,7 +73,9 @@ func (e *FixEngine) AttachSession(s *session.Session) error {
 				target = "T"
 			}
 			hb := newHeartbeatMessage(sender, target)
-			_ = e.SendMessage(hb)
+			if err := e.SendMessage(hb); err != nil {
+				e.Logger.Error("failed to send heartbeat", "error", err)
+			}
 		})
 		e.hbSender.Start(context.Background())
 	}

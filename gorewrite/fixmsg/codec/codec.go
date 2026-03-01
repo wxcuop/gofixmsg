@@ -95,11 +95,18 @@ func (c *Codec) Parse(buf []byte) (*fixmsg.FixMessage, error) {
 		}
 		value := pairs[i][1]
 		if grpSpec, ok := msgSpec.Groups[tag]; ok {
-			count, _ := strconv.Atoi(value)
+			count, err := strconv.Atoi(value)
+			if err != nil {
+				return nil, fmt.Errorf("codec: parse group %d count: %w", tag, err)
+			}
 			rg := fixmsg.NewRepeatingGroup(tag)
 			rg.FirstTag = grpSpec.FirstTag
 			i++
-			i, _ = parseGroup(pairs, i, rg, grpSpec, count)
+			var errGrp error
+			i, _, errGrp = parseGroup(pairs, i, rg, grpSpec, count)
+			if errGrp != nil {
+				return nil, errGrp
+			}
 			msg.SetGroup(tag, rg)
 		} else {
 			msg.Set(tag, value)
@@ -109,9 +116,9 @@ func (c *Codec) Parse(buf []byte) (*fixmsg.FixMessage, error) {
 	return msg, nil
 }
 
-func parseGroup(pairs [][2]string, offset int, rg *fixmsg.RepeatingGroup, grpSpec *spec.GroupSpec, count int) (int, int) {
+func parseGroup(pairs [][2]string, offset int, rg *fixmsg.RepeatingGroup, grpSpec *spec.GroupSpec, count int) (int, int, error) {
 	if count == 0 {
-		return offset, 0
+		return offset, 0, nil
 	}
 	firstTag := grpSpec.FirstTag
 	var current fixmsg.FixFragment
@@ -137,11 +144,18 @@ func parseGroup(pairs [][2]string, offset int, rg *fixmsg.RepeatingGroup, grpSpe
 			break
 		}
 		if subSpec, ok := grpSpec.NestedGroups[tag]; ok {
-			subCount, _ := strconv.Atoi(value)
+			subCount, err := strconv.Atoi(value)
+			if err != nil {
+				return offset, rg.Len(), fmt.Errorf("codec: parse sub-group %d count: %w", tag, err)
+			}
 			subRG := fixmsg.NewRepeatingGroup(tag)
 			subRG.FirstTag = subSpec.FirstTag
 			offset++
-			offset, _ = parseGroup(pairs, offset, subRG, subSpec, subCount)
+			var errSub error
+			offset, _, errSub = parseGroup(pairs, offset, subRG, subSpec, subCount)
+			if errSub != nil {
+				return offset, rg.Len(), errSub
+			}
 			current.SetGroup(tag, subRG)
 		} else {
 			current.Set(tag, value)
@@ -151,7 +165,7 @@ func parseGroup(pairs [][2]string, offset int, rg *fixmsg.RepeatingGroup, grpSpe
 	if current != nil {
 		rg.Members = append(rg.Members, current)
 	}
-	return offset, rg.Len()
+	return offset, rg.Len(), nil
 }
 
 // Serialise converts msg to FIX wire-format bytes.

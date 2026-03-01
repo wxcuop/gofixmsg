@@ -45,14 +45,17 @@ func (s *SeqManager) Outgoing() int {
 	return s.out
 }
 
-func (s *SeqManager) SetIncoming(n int) {
+func (s *SeqManager) SetIncoming(n int) error {
 	s.mu.Lock()
 	s.in = n
 	vIn, vOut := s.in, s.out
 	s.mu.Unlock()
 	if s.store != nil {
-		_ = s.store.SaveSessionSeq(s.sid, vOut, vIn)
+		if err := s.store.SaveSessionSeq(s.sid, vOut, vIn); err != nil {
+			return fmt.Errorf("seqmgr: persist in seq: %w", err)
+		}
 	}
+	return nil
 }
 
 func (s *SeqManager) SetOutgoing(n int) error {
@@ -68,15 +71,17 @@ func (s *SeqManager) SetOutgoing(n int) error {
 	return nil
 }
 
-func (s *SeqManager) IncrementIncoming() int {
+func (s *SeqManager) IncrementIncoming() (int, error) {
 	s.mu.Lock()
 	s.in++
 	vIn, vOut := s.in, s.out
 	s.mu.Unlock()
 	if s.store != nil {
-		_ = s.store.SaveSessionSeq(s.sid, vOut, vIn)
+		if err := s.store.SaveSessionSeq(s.sid, vOut, vIn); err != nil {
+			return vIn, fmt.Errorf("seqmgr: persist in seq: %w", err)
+		}
 	}
-	return vIn
+	return vIn, nil
 }
 
 func (s *SeqManager) IncrementOutgoing() (int, error) {

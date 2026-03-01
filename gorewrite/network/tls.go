@@ -2,12 +2,15 @@ package network
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"os"
 )
 
 // LoadTLSConfig loads TLS configuration from certificate files.
 // Returns nil if no cert/key files are provided (non-TLS mode).
 // Returns an error if cert/key files are specified but cannot be loaded.
+// caFile is used to configure both RootCAs (for client cert verification) and ClientCAs (for server cert verification).
 func LoadTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
 	// No TLS config if no cert file
 	if certFile == "" {
@@ -23,27 +26,26 @@ func LoadTLSConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
 	}
 	cfg.Certificates = []tls.Certificate{cert}
 
-	// Load CA certificate if provided (for client-side verification)
+	// Load CA certificate if provided (for peer verification)
 	if caFile != "" {
-		caCert, err := readCertFile(caFile)
+		caCertData, err := os.ReadFile(caFile)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load CA certificate: %w", err)
+			return nil, fmt.Errorf("failed to read CA certificate file: %w", err)
 		}
-		// For simplicity, just store the cert data. Real implementations should
-		// add to certPool and use SetClientCertVerification.
-		cfg.ClientAuth = tls.RequireAnyClientCert
-		_ = caCert // TODO: Implement full CA cert chain validation
+
+		// Parse CA certificate and add to cert pool
+		caCertPool := x509.NewCertPool()
+		if !caCertPool.AppendCertsFromPEM(caCertData) {
+			return nil, fmt.Errorf("failed to parse CA certificate from %s", caFile)
+		}
+
+		// Configure for both client and server verification modes
+		// RootCAs: used for verifying peer certs when in client mode (initiator)
+		cfg.RootCAs = caCertPool
+		// ClientCAs: used for verifying client certs when in server mode (acceptor)
+		cfg.ClientCAs = caCertPool
+		cfg.ClientAuth = tls.RequireAndVerifyClientCert
 	}
 
 	return cfg, nil
-}
-
-// readCertFile is a helper to read certificate file content.
-func readCertFile(filename string) ([]byte, error) {
-	// In a full implementation, this would parse the cert and add to x509.CertPool
-	// For now, just ensure the file can be read.
-	content := make([]byte, 0)
-	// In a real implementation, use ioutil.ReadFile or os.ReadFile
-	// content, err := os.ReadFile(filename)
-	return content, nil
 }
