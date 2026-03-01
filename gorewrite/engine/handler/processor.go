@@ -1,4 +1,4 @@
-package engine
+package handler
 
 import (
 	"fmt"
@@ -12,6 +12,7 @@ type Processor struct {
 	h    map[string]func(*fixmsg.FixMessage) error
 	app  Application
 	spec *spec.FixSpec
+	validateFn func(*fixmsg.FixMessage, *spec.FixSpec) error
 }
 
 func NewProcessor() *Processor { return &Processor{h: make(map[string]func(*fixmsg.FixMessage) error)} }
@@ -26,10 +27,15 @@ func (p *Processor) SetSpec(s *spec.FixSpec) {
 	p.spec = s
 }
 
+// SetValidateFunc sets the validation function
+func (p *Processor) SetValidateFunc(fn func(*fixmsg.FixMessage, *spec.FixSpec) error) {
+	p.validateFn = fn
+}
+
 func (p *Processor) Register(msgType string, fn func(*fixmsg.FixMessage) error) {
 	// automatically wrap non-admin handlers to call FromApp
 	wrapped := func(m *fixmsg.FixMessage) error {
-		if !isAdminMessageType(msgType) && p.app != nil {
+		if !IsAdminMessageType(msgType) && p.app != nil {
 			if err := p.app.FromApp(m, ""); err != nil {
 				if p.app != nil {
 					p.app.OnReject(m, fmt.Sprintf("FromApp rejected: %v", err), "")
@@ -47,7 +53,7 @@ func (p *Processor) Register(msgType string, fn func(*fixmsg.FixMessage) error) 
 func (p *Processor) RegisterWithFromApp(msgType string, sessionID string, fn func(*fixmsg.FixMessage) error) {
 	wrapped := func(m *fixmsg.FixMessage) error {
 		// call FromApp for non-admin messages
-		if !isAdminMessageType(msgType) && p.app != nil {
+		if !IsAdminMessageType(msgType) && p.app != nil {
 			if err := p.app.FromApp(m, sessionID); err != nil {
 				if p.app != nil {
 					p.app.OnReject(m, fmt.Sprintf("FromApp rejected: %v", err), sessionID)
@@ -63,12 +69,16 @@ func (p *Processor) RegisterWithFromApp(msgType string, sessionID string, fn fun
 
 func (p *Processor) Process(m *fixmsg.FixMessage) error {
 	// Validate message structure and dictionary if provided
-	if err := ValidateMessage(m, p.spec); err != nil {
-		fmt.Printf("PROCESSOR: Validation failed for MsgType %s: %v\n", m.FixFragment[35], err)
+	var validateErr error
+	if p.validateFn != nil {
+		validateErr = p.validateFn(m, p.spec)
+	}
+	if validateErr != nil {
+		fmt.Printf("PROCESSOR: Validation failed for MsgType %s: %v\n", m.FixFragment[35], validateErr)
 		if p.app != nil {
-			p.app.OnReject(m, fmt.Sprintf("Validation failed: %v", err), "")
+			p.app.OnReject(m, fmt.Sprintf("Validation failed: %v", validateErr), "")
 		}
-		return fmt.Errorf("validation failed: %w", err)
+		return fmt.Errorf("validation failed: %w", validateErr)
 	}
 
 	mt, _ := m.Get(35)

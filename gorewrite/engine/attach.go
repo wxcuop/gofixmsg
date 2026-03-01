@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/wxcuop/pyfixmsg_plus/engine/session"
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/heartbeat"
 )
 
 // AttachSession attaches an existing Session to the engine and starts monitor and heartbeat sender.
-func (e *FixEngine) AttachSession(s *Session) error {
+func (e *FixEngine) AttachSession(s *session.Session) error {
 	if s == nil {
 		return fmt.Errorf("nil session")
 	}
@@ -61,7 +62,7 @@ func (e *FixEngine) AttachSession(s *Session) error {
 			if target == "" {
 				target = "T"
 			}
-			hb := NewHeartbeatMessage(sender, target)
+			hb := newHeartbeatMessage(sender, target)
 			_ = e.SendMessage(hb)
 		})
 		e.hbSender.Start(context.Background())

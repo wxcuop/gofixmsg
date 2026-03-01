@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
+	"github.com/wxcuop/pyfixmsg_plus/engine/session"
 )
 
 // TestHeartbeatMonitor_SendsTestRequestAndCloses verifies that the monitor
@@ -18,10 +20,10 @@ func TestHeartbeatMonitor_SendsTestRequestAndCloses(t *testing.T) {
 	defer peer.Close()
 
 	// create a minimal processor that does nothing
-	dummy := NewProcessor()
+	dummy := handler.NewProcessor()
 
 	// create session on local end
-	s := NewSession(local, dummy)
+	s := session.NewSession(local, dummy)
 	s.Start()
 	defer s.Stop()
 

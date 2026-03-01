@@ -10,6 +10,8 @@ import (
 	"time"
 
 	"github.com/wxcuop/pyfixmsg_plus/config"
+	"github.com/wxcuop/pyfixmsg_plus/engine/handler"
+	"github.com/wxcuop/pyfixmsg_plus/engine/session"
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/heartbeat"
 	"github.com/wxcuop/pyfixmsg_plus/network"
@@ -21,8 +23,8 @@ import (
 type FixEngine struct {
 	Initiator *network.Initiator
 	Conn      net.Conn
-	Session   *Session
-	Proc      *Processor
+	Session   *session.Session
+	Proc      *handler.Processor
 	SM        *state.StateMachine
 	Store     store.Store
 	SeqMgr    *SeqManager
@@ -78,7 +80,7 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 	e.Store = st
 	// Only create a new processor if one hasn't been set already
 	if e.Proc == nil {
-		e.Proc = NewProcessor()
+		e.Proc = handler.NewProcessor()
 	}
 	// set application on processor for FromApp callbacks
 	e.Proc.SetApplication(e.App)
@@ -137,8 +139,8 @@ func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store) {
 		e.TargetCompID = "T"
 	}
 	e.heartbeatInterval = time.Duration(intervalSec) * time.Second
-	ctx := &HandlerContext{SM: sm, Store: st, Engine: e}
-	RegisterDefaultHandlers(e.Proc, ctx)
+	ctx := &handler.HandlerContext{SM: sm, Store: st, Engine: e}
+	handler.RegisterDefaultHandlers(e.Proc, ctx)
 	// Note: OnCreate callback should be called after session is attached, not here
 }
 
@@ -171,7 +173,7 @@ func (e *FixEngine) Connect() error {
 	}
 	e.Conn = c
 	// create session and attach
-	s := NewSession(c, e.Proc)
+	s := session.NewSession(c, e.Proc)
 	return e.AttachSession(s)
 }
 
@@ -207,7 +209,7 @@ func (e *FixEngine) startReconnectLoop() {
 			if err == nil {
 				// attach new session
 				e.Conn = c
-				s := NewSession(c, e.Proc)
+				s := session.NewSession(c, e.Proc)
 				_ = e.AttachSession(s)
 				// stop reconnect loop
 				e.reconnectMu.Lock()
@@ -260,4 +262,115 @@ func (e *FixEngine) HandleIncoming(m *fixmsg.FixMessage) error {
 		return fmt.Errorf("processor not configured")
 	}
 	return e.Proc.Process(m)
+}
+
+// SendMessage sends a FIX message with automatic field setup (CompIDs, SeqNum, SendingTime).
+func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error {
+	// ensure Sender/Target CompIDs are present
+	if !m.Contains(fixmsg.TagSenderCompID) {
+		sender := e.SenderCompID
+		if sender == "" {
+			sender = "S"
+		}
+		m.Set(fixmsg.TagSenderCompID, sender)
+	}
+	if !m.Contains(fixmsg.TagTargetCompID) {
+		target := e.TargetCompID
+		if target == "" {
+			target = "T"
+		}
+		m.Set(fixmsg.TagTargetCompID, target)
+	}
+
+	// stamp MsgSeqNum if missing
+	if !m.Contains(fixmsg.TagMsgSeqNum) {
+		seq := 1
+		if e.SeqMgr != nil {
+			if n, err := e.SeqMgr.IncrementOutgoing(); err == nil {
+				seq = n
+			}
+		}
+		m.Set(fixmsg.TagMsgSeqNum, strconv.Itoa(seq))
+	}
+
+	// stamp SendingTime if missing
+	if !m.Contains(fixmsg.TagSendingTime) {
+		m.Set(fixmsg.TagSendingTime, time.Now().UTC().Format("20060102-15:04:05.000"))
+	}
+
+	// Call ToApp callback for non-admin messages (admin callbacks are called by handlers/callers)
+	msgType, _ := m.Get(35)
+	if msgType != "" && !handler.IsAdminMessageType(msgType) {
+		if e.App != nil {
+			if err := e.App.ToApp(m, e.sessionID); err != nil {
+				if e.App != nil {
+					e.App.OnReject(m, fmt.Sprintf("ToApp rejected: %v", err), e.sessionID)
+				}
+				return err
+			}
+		}
+	}
+
+	b, err := m.ToWire()
+	if err != nil {
+		return err
+	}
+	// prefer SessionSend when session is present
+	if e.Session != nil {
+		return e.Session.Send(b)
+	}
+	if e.Conn == nil {
+		return fmt.Errorf("no connection")
+	}
+	_, err = e.Conn.Write(b)
+	return err
+}
+
+// EngineI interface implementations
+
+// GetApp returns the application callback handler.
+func (e *FixEngine) GetApp() handler.Application {
+	// engine.Application and handler.Application have the same interface definition
+	// so this is safe even though they're technically different types
+	return e.App
+}
+
+// GetSessionID returns the session ID.
+func (e *FixEngine) GetSessionID() string {
+	return e.sessionID
+}
+
+// GetSeqMgr returns the sequence manager.
+func (e *FixEngine) GetSeqMgr() handler.SeqMgrI {
+	return e.SeqMgr
+}
+
+// Helper functions for creating FIX messages
+
+// newHeartbeatMessage creates a minimal FIX heartbeat message (MsgType=0).
+func newHeartbeatMessage(sender, target string) *fixmsg.FixMessage {
+	m := fixmsg.NewFixMessageFromMap(map[int]string{
+		8:  "FIX.4.4",
+		35: "0",
+		49: sender,
+		56: target,
+	})
+	m.SetLenAndChecksum()
+	return m
+}
+
+// newSequenceResetMessage creates a SequenceReset message (MsgType=4).
+func newSequenceResetMessage(sender, target string, newSeq int, gapFill bool) *fixmsg.FixMessage {
+	m := fixmsg.NewFixMessageFromMap(map[int]string{
+		8:  "FIX.4.4",
+		35: "4",
+		49: sender,
+		56: target,
+		36: strconv.Itoa(newSeq),
+	})
+	if gapFill {
+		m.Set(123, "Y")
+	}
+	m.SetLenAndChecksum()
+	return m
 }

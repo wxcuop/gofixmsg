@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wxcuop/pyfixmsg_plus/engine/session"
 	"github.com/wxcuop/pyfixmsg_plus/fixmsg"
 	"github.com/wxcuop/pyfixmsg_plus/network"
 	"github.com/wxcuop/pyfixmsg_plus/state"
@@ -80,7 +81,7 @@ func (m *MultiSessionEngine) handleNewConnection(conn *network.Conn) {
 	engine.SetupComponents(sm, st)
 
 	// Attach connection and session (conn is already a wrapped network.Conn)
-	s := NewSession(conn, engine.Proc)
+	s := session.NewSession(conn, engine.Proc)
 	engine.Conn = conn.Underlying()
 
 	if err := engine.AttachSession(s); err != nil {
@@ -94,8 +95,8 @@ func (m *MultiSessionEngine) handleNewConnection(conn *network.Conn) {
 	// Start a monitor goroutine that waits for the session to close
 	// and then unregisters it from the map
 	go func() {
-		// Wait for the session to close by polling Session.ctx
-		<-s.ctx.Done()
+		// Wait for the session to close using Context()
+		<-s.Context().Done()
 		// Give the engine's OnClose a moment to complete detach/cleanup
 		time.Sleep(10 * time.Millisecond)
 		// Unregister from the multi-session map
