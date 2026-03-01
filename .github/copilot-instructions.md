@@ -100,7 +100,7 @@ GoFixMsg uses goroutines for true concurrent execution:
 - **Session.writeLoop()**: Goroutine that drains the send queue to the socket
 - **Heartbeat goroutines**: Ticker for periodic heartbeat/test request
 
-All shared state is protected by `sync.Mutex`. See [DEVELOPER.md](gofixmsg/DEVELOPER.md#data-race-prevention) for synchronization patterns.
+All shared state is protected by `sync.Mutex`. See [DEVELOPER.md](../gofixmsg/DEVELOPER.md#data-race-prevention) for synchronization patterns.
 
 ### Application Interface
 Implement `engine.Application` to receive FIX callbacks:
@@ -151,7 +151,7 @@ defer t.mu.Unlock()
 *t.callOrder = append(*t.callOrder, ...)
 ```
 
-See [DEVELOPER.md](../gofixmsg/DEVELOPER.md#concurrency-and-threading) for:
+See [DEVELOPER.md](../gofixmsg/DEVELOPER.md#data-race-prevention) for:
 - Critical synchronization points (FixEngine.attachMu, Heartbeat.mu, Session.mu)
 - Initialization order principles
 - How to use `go test -race ./...` for validation
