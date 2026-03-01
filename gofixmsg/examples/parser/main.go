@@ -5,7 +5,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/wxcuop/gofixmsg/fixmsg"
@@ -13,7 +12,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== GoFixMsg Library Examples ===\n")
+	fmt.Println("=== GoFixMsg Library Examples ===")
 
 	// Example 1: Create a simple Logon message
 	fmt.Println("1. Creating a Logon Message")
@@ -70,9 +69,9 @@ func createLogonExample() {
 	}
 
 	fmt.Printf("Parsed back - MsgType: %s, Sender: %s, Target: %s\n",
-		parsed.Get(fixmsg.TagMsgType),
-		parsed.Get(fixmsg.TagSenderCompID),
-		parsed.Get(fixmsg.TagTargetCompID),
+		parsed.MustGet(fixmsg.TagMsgType),
+		parsed.MustGet(fixmsg.TagSenderCompID),
+		parsed.MustGet(fixmsg.TagTargetCompID),
 	)
 }
 
@@ -103,10 +102,10 @@ func createOrderExample() {
 	}
 
 	fmt.Printf("New Order Single Message:\n")
-	fmt.Printf("ClOrdID: %s\n", msg.Get(fixmsg.TagClOrdID))
-	fmt.Printf("Symbol: %s\n", msg.Get(fixmsg.TagSymbol))
-	fmt.Printf("Side: %s (1=Buy, 2=Sell)\n", msg.Get(fixmsg.TagSide))
-	fmt.Printf("Qty: %s @ $%s\n", msg.Get(fixmsg.TagOrderQty), msg.Get(fixmsg.TagPrice))
+	fmt.Printf("ClOrdID: %s\n", msg.MustGet(fixmsg.TagClOrdID))
+	fmt.Printf("Symbol: %s\n", msg.MustGet(fixmsg.TagSymbol))
+	fmt.Printf("Side: %s (1=Buy, 2=Sell)\n", msg.MustGet(fixmsg.TagSide))
+	fmt.Printf("Qty: %s @ $%s\n", msg.MustGet(fixmsg.TagOrderQty), msg.MustGet(fixmsg.TagPrice))
 	fmt.Printf("Wire length: %d bytes\n", len(wire))
 }
 
@@ -134,15 +133,15 @@ func parseMessageExample() {
 
 	// Access fields
 	fmt.Printf("Parsed Execution Report:\n")
-	fmt.Printf("  MsgType: %s\n", msg.Get(fixmsg.TagMsgType))
+	fmt.Printf("  MsgType: %s\n", msg.MustGet(fixmsg.TagMsgType))
 	fmt.Printf("  From: %s -> %s (Seq: %s)\n",
-		msg.Get(fixmsg.TagSenderCompID),
-		msg.Get(fixmsg.TagTargetCompID),
-		msg.Get(fixmsg.TagMsgSeqNum),
+		msg.MustGet(fixmsg.TagSenderCompID),
+		msg.MustGet(fixmsg.TagTargetCompID),
+		msg.MustGet(fixmsg.TagMsgSeqNum),
 	)
-	fmt.Printf("  ClOrdID: %s\n", msg.Get(fixmsg.TagClOrdID))
-	fmt.Printf("  BodyLength: %s\n", msg.Get(fixmsg.TagBodyLength))
-	fmt.Printf("  CheckSum: %s\n", msg.Get(fixmsg.TagCheckSum))
+	fmt.Printf("  ClOrdID: %s\n", msg.MustGet(fixmsg.TagClOrdID))
+	fmt.Printf("  BodyLength: %s\n", msg.MustGet(fixmsg.TagBodyLength))
+	fmt.Printf("  CheckSum: %s\n", msg.MustGet(fixmsg.TagCheckSum))
 }
 
 // Example 4: Building a complex message with multiple fields
@@ -197,7 +196,7 @@ func fieldAccessExample() {
 
 	// Set by tag number
 	msg.Set(49, "SENDER123")
-	fmt.Printf("  Tag 49 (SenderCompID): %s\n", msg.Get(49))
+	fmt.Printf("  Tag 49 (SenderCompID): %s\n", msg.MustGet(49))
 
 	// Check if field exists
 	if value, exists := msg.FixFragment[fixmsg.TagSenderCompID]; exists {
@@ -206,7 +205,7 @@ func fieldAccessExample() {
 
 	// Update a field
 	msg.Set(fixmsg.TagTargetCompID, "TARGET456")
-	fmt.Printf("  Tag 56 (TargetCompID): %s\n", msg.Get(fixmsg.TagTargetCompID))
+	fmt.Printf("  Tag 56 (TargetCompID): %s\n", msg.MustGet(fixmsg.TagTargetCompID))
 
 	// Iterate over all fields
 	fmt.Printf("\n  All fields in message:\n")

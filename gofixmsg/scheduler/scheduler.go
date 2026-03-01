@@ -107,7 +107,8 @@ tasks := s.tasks
 handlers := s.handlers
 s.mu.RUnlock()
 
-now := time.Now()
+	now := time.Now()
+	nowMinute := now.Truncate(time.Minute)
 
 for _, task := range tasks {
 // Parse task time (HH:MM format)
@@ -121,8 +122,10 @@ continue
 taskTime := time.Date(now.Year(), now.Month(), now.Day(),
 t.Hour(), t.Minute(), 0, 0, now.Location())
 
-// Check if we're within a 1-minute window of the task time
-if now.After(taskTime) && now.Before(taskTime.Add(1*time.Minute)) {
+		// Check if task is due in this minute or the immediately previous minute.
+		// This tolerates scheduler tick jitter and HH:MM second truncation.
+		delta := nowMinute.Sub(taskTime)
+		if delta >= 0 && delta <= time.Minute {
 handler, ok := handlers[task.Action]
 if !ok {
 log.Printf("scheduler: unknown action: %s", task.Action)

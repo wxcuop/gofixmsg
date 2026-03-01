@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 
 	"github.com/wxcuop/gofixmsg/fixmsg"
 	"github.com/wxcuop/gofixmsg/fixmsg/codec"
@@ -83,7 +82,7 @@ func printPretty(msg *fixmsg.FixMessage, showTags bool) {
 	fmt.Println("+-------+------------------+--------------------------------------------+")
 
 	for _, tag := range tags {
-		value := msg.FixFragment[tag]
+		value := fmt.Sprint(msg.FixFragment[tag])
 		if showTags {
 			name := tagName(tag)
 			fmt.Printf("| %-5d | %-16s | %-40s |\n", tag, name, truncate(value, 40))

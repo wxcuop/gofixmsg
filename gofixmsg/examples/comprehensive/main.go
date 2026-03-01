@@ -16,7 +16,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== GoFixMsg Comprehensive Examples ===\n")
+	fmt.Println("=== GoFixMsg Comprehensive Examples ===")
 
 	// Load FIX spec
 	specFile := findSpecFile("FIX44.xml")
@@ -30,7 +30,7 @@ func main() {
 			fmt.Printf("Loaded FIX spec from %s (version %s)\n\n", specFile, fixSpec.Version)
 		}
 	} else {
-		fmt.Println("Note: FIX44.xml not found; examples will use basic codec without spec\n")
+		fmt.Println("Note: FIX44.xml not found; examples will use basic codec without spec")
 	}
 
 	// Example 1: Vanilla tag/value parsing and access

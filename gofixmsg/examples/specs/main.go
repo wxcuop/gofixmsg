@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	fmt.Println("=== GoFixMsg Advanced Spec Usage ===\n")
+	fmt.Println("=== GoFixMsg Advanced Spec Usage ===")
 
 	// Load FIX spec
 	specFile := findSpecFile("FIX44.xml")
@@ -28,7 +28,7 @@ func main() {
 			fmt.Printf("Loaded FIX spec from %s (version %s)\n\n", specFile, fixSpec.Version)
 		}
 	} else {
-		fmt.Println("Note: FIX44.xml not found; examples will use basic codec\n")
+		fmt.Println("Note: FIX44.xml not found; examples will use basic codec")
 	}
 
 	// Example 1: Standard codec usage

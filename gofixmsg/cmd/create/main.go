@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/wxcuop/gofixmsg/fixmsg"
-	"github.com/wxcuop/gofixmsg/fixmsg/codec"
 )
 
 func main() {
@@ -105,7 +104,7 @@ func printMessageDetails(msg *fixmsg.FixMessage) {
 
 func formatWireReadable(wire []byte) string {
 	var sb strings.Builder
-	for i, b := range wire {
+	for _, b := range wire {
 		if b == 0x01 {
 			sb.WriteString("|")
 		} else if b >= 32 && b < 127 {
