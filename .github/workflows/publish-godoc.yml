@@ -229,9 +229,9 @@ jobs:
               <section>
                   <h2>🔗 Quick Links</h2>
                   <ul>
-                      <li><a href="https://github.com/wxcuop/pyfixmsg_plus">GitHub Repository</a></li>
-                      <li><a href="https://github.com/wxcuop/pyfixmsg_plus/blob/main/gofixmsg/DEVELOPER.md">Developer Guide</a></li>
-                      <li><a href="https://github.com/wxcuop/pyfixmsg_plus/tree/main/gofixmsg/examples">Examples</a></li>
+                      <li><a href="https://github.com/wxcuop/gofixmsg">GitHub Repository</a></li>
+                      <li><a href="https://github.com/wxcuop/gofixmsg/blob/main/DEVELOPER.md">Developer Guide</a></li>
+                      <li><a href="https://github.com/wxcuop/gofixmsg/tree/main/examples">Examples</a></li>
                   </ul>
               </section>
               
@@ -248,6 +248,12 @@ jobs:
           name: godoc
           path: docs/api/
           retention-days: 30
+
+      - name: Configure git for deployment
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/wxcuop/gofixmsg.git"
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
