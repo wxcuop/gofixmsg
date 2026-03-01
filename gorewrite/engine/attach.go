@@ -15,12 +15,6 @@ func (e *FixEngine) AttachSession(s *Session) error {
 		return fmt.Errorf("nil session")
 	}
 	e.Session = s
-	
-	// If session already has a Processor that is our *Processor, use it
-	if p, ok := s.Processor.(*Processor); ok {
-		e.Proc = p
-	}
-
 	// Call OnCreate callback
 	if e.App != nil {
 		e.App.OnCreate(e.sessionID)
