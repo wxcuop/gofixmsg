@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/go-build
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          key: ${{ runner.os }}-go-${{ hashFiles('gofixmsg/go.sum') }}
 
       - name: Download dependencies
         working-directory: ./gofixmsg
