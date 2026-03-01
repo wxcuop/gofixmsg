@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GoFixMsg</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; 
+            margin: 0; 
+            line-height: 1.6;
+            background: #f5f5f5;
+        }
+        .nav { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            padding: 15px 20px; 
+            margin: 0;
+        }
+        .nav a { 
+            color: white; 
+            text-decoration: none; 
+            margin-right: 15px;
+            font-weight: 500;
+        }
+        .nav a:hover { text-decoration: underline; }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 5px; 
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        code { 
+            background: #f5f5f5; 
+            padding: 2px 6px; 
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="index.html">← Back to Index</a>
+    </div>
+    <div class="container">
+<pre>
+<pre>
+<pre>FUNCTIONS
+<pre>
+<pre>func NewDefaultStateMachine(sessionID string) *state.StateMachine
+<pre>    NewDefaultStateMachine creates a new state machine for a session.
+<pre>
+<pre>func NewDefaultStore(sessionID string) store.Store
+<pre>    NewDefaultStore creates a new message store for a session.
+<pre>
+<pre>func ValidateMessage(m *fixmsg.FixMessage, s *spec.FixSpec) error
+<pre>    ValidateMessage checks if a FIX message is structurally valid against
+<pre>    standard rules and optionally against a Data Dictionary (FixSpec) if
+<pre>    provided.
+<pre>
+<pre>
+<pre>TYPES
+<pre>
+<pre>type Application interface {
+<pre>	// OnCreate is called when a session is created (before logon).
+<pre>	OnCreate(sessionID string)
+<pre>
+<pre>	// OnLogon is called after a successful logon.
+<pre>	OnLogon(sessionID string)
+<pre>
+<pre>	// OnLogout is called after a logout.
+<pre>	OnLogout(sessionID string)
+<pre>
+<pre>	// ToAdmin is called just before an admin message (35=A/5/0/1/2/3/4) is sent.
+<pre>	// The application may modify the message or return error to reject sending.
+<pre>	ToAdmin(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>	// FromAdmin is called after an admin message is received and parsed.
+<pre>	// The application may reject processing by returning error.
+<pre>	FromAdmin(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>	// ToApp is called just before an application message (not admin) is sent.
+<pre>	// The application may modify the message or return error to reject sending.
+<pre>	ToApp(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>	// FromApp is called after an application message is received and parsed.
+<pre>	// The application may reject processing by returning error.
+<pre>	FromApp(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>	// OnMessage is called for every application-level message after it has been received and processed.
+<pre>	// This is called after FromApp regardless of result. Use this for generic message handling.
+<pre>	OnMessage(msg *fixmsg.FixMessage, sessionID string)
+<pre>
+<pre>	// OnReject is called when a message is rejected (e.g., invalid seqnum, parsing error).
+<pre>	OnReject(msg *fixmsg.FixMessage, reason string, sessionID string)
+<pre>}
+<pre>    Application defines callbacks for FIX session lifecycle and message events.
+<pre>    Applications implement this interface to hook into session management and
+<pre>    message processing.
+<pre>
+<pre>type FixEngine struct {
+<pre>	Initiator *network.Initiator
+<pre>	Conn      net.Conn
+<pre>	Session   *session.Session
+<pre>	Proc      *handler.Processor
+<pre>	SM        *state.StateMachine
+<pre>	Store     store.Store
+<pre>	SeqMgr    *SeqManager
+<pre>	Monitor   *HeartbeatMonitor
+<pre>	// configured CompIDs for outgoing admin messages
+<pre>	SenderCompID string
+<pre>	TargetCompID string
+<pre>
+<pre>	// application callbacks
+<pre>	App Application
+<pre>
+<pre>	// logger for engine operations
+<pre>	Logger *slog.Logger
+<pre>	// scheduler for config-driven actions
+<pre>	Scheduler *scheduler.RuntimeScheduler
+<pre>	// Has unexported fields.
+<pre>}
+<pre>    FixEngine holds components needed for a session.
+<pre>
+<pre>func NewFixEngine(init *network.Initiator) *FixEngine
+<pre>
+<pre>func (e *FixEngine) AttachSession(s *session.Session) error
+<pre>    AttachSession attaches an existing Session to the engine and starts monitor
+<pre>    and heartbeat sender.
+<pre>
+<pre>func (e *FixEngine) Close() error
+<pre>
+<pre>func (e *FixEngine) Connect() error
+<pre>
+<pre>func (e *FixEngine) DetachSession()
+<pre>    DetachSession stops heartbeat and monitor and detaches session
+<pre>
+<pre>func (e *FixEngine) GetApp() handler.Application
+<pre>    GetApp returns the application callback handler.
+<pre>
+<pre>func (e *FixEngine) GetLogger() *slog.Logger
+<pre>
+<pre>func (e *FixEngine) GetSeqMgr() handler.SeqMgrI
+<pre>    GetSeqMgr returns the sequence manager.
+<pre>
+<pre>func (e *FixEngine) GetSessionID() string
+<pre>    GetSessionID returns the session ID.
+<pre>
+<pre>func (e *FixEngine) HandleIncoming(m *fixmsg.FixMessage) error
+<pre>    HandleIncoming processes an incoming FIX message using registered handlers.
+<pre>
+<pre>func (e *FixEngine) SendMessage(m *fixmsg.FixMessage) error
+<pre>    SendMessage sends a FIX message with automatic field setup (CompIDs, SeqNum,
+<pre>    SendingTime).
+<pre>
+<pre>func (e *FixEngine) SessionSend(b []byte) error
+<pre>
+<pre>func (e *FixEngine) SetApplication(app Application)
+<pre>    SetApplication sets the application callback handler.
+<pre>
+<pre>func (e *FixEngine) SetReconnectParams(initial, max time.Duration, enable bool)
+<pre>    SetReconnectParams configures reconnect/backoff policy
+<pre>
+<pre>func (e *FixEngine) SetSessionID(sid string)
+<pre>    SetSessionID sets the session ID for application callbacks.
+<pre>
+<pre>func (e *FixEngine) SetupComponents(sm *state.StateMachine, st store.Store)
+<pre>    SetupComponents wires state machine and store into the engine and registers
+<pre>    handlers. Also loads TLS configuration from config if ssl_* keys are
+<pre>    present.
+<pre>
+<pre>func (e *FixEngine) StartScheduler()
+<pre>    StartScheduler begins the runtime scheduler
+<pre>
+<pre>func (e *FixEngine) StopScheduler()
+<pre>    StopScheduler halts the runtime scheduler
+<pre>
+<pre>type HeartbeatMonitor struct {
+<pre>	Interval       time.Duration
+<pre>	TestReqTimeout time.Duration
+<pre>
+<pre>	// Has unexported fields.
+<pre>}
+<pre>    HeartbeatMonitor monitors inbound traffic and sends TestRequest when peer
+<pre>    misses heartbeats.
+<pre>
+<pre>func NewHeartbeatMonitor(e *FixEngine, interval, testReqTimeout time.Duration) *HeartbeatMonitor
+<pre>
+<pre>func (h *HeartbeatMonitor) Seen()
+<pre>
+<pre>func (h *HeartbeatMonitor) Start(ctx context.Context)
+<pre>
+<pre>func (h *HeartbeatMonitor) Stop()
+<pre>
+<pre>type MultiSessionEngine struct {
+<pre>
+<pre>	// Acceptor listens for incoming connections
+<pre>	Acceptor *network.Acceptor
+<pre>
+<pre>	// Application callback interface (shared across all sessions)
+<pre>	App Application
+<pre>
+<pre>	// Per-session factories (for creating state machines and stores)
+<pre>	StateMachineFactory func(string) *state.StateMachine
+<pre>	StoreFactory        func(string) store.Store
+<pre>	// Has unexported fields.
+<pre>}
+<pre>    MultiSessionEngine manages multiple concurrent FIX sessions. It supports
+<pre>    acceptor-mode operation where multiple initiators can connect to a single
+<pre>    acceptor, each establishing its own independent session.
+<pre>
+<pre>func NewMultiSessionEngine(addr string) *MultiSessionEngine
+<pre>    NewMultiSessionEngine creates a new multi-session engine for the given
+<pre>    address.
+<pre>
+<pre>func (m *MultiSessionEngine) BroadcastMessage(msg *fixmsg.FixMessage) error
+<pre>    BroadcastMessage sends a message to all active sessions (for admin
+<pre>    messages).
+<pre>
+<pre>func (m *MultiSessionEngine) GetSession(sessionID string) (*FixEngine, bool)
+<pre>    GetSession retrieves a session by ID (read-only).
+<pre>
+<pre>func (m *MultiSessionEngine) SessionCount() int
+<pre>    SessionCount returns the number of active sessions.
+<pre>
+<pre>func (m *MultiSessionEngine) SessionIDs() []string
+<pre>    SessionIDs returns all active session IDs (for monitoring).
+<pre>
+<pre>func (m *MultiSessionEngine) SetApplication(app Application)
+<pre>    SetApplication sets the application callback for all sessions.
+<pre>
+<pre>func (m *MultiSessionEngine) SetStateMachineFactory(factory func(string) *state.StateMachine)
+<pre>    SetStateMachineFactory sets the factory function for creating state machines
+<pre>    per session.
+<pre>
+<pre>func (m *MultiSessionEngine) SetStoreFactory(factory func(string) store.Store)
+<pre>    SetStoreFactory sets the factory function for creating stores per session.
+<pre>
+<pre>func (m *MultiSessionEngine) Start() error
+<pre>    Start begins accepting incoming connections. Each connection creates a new
+<pre>    session with a unique session ID.
+<pre>
+<pre>func (m *MultiSessionEngine) Stop() error
+<pre>    Stop closes all active sessions and stops accepting new connections.
+<pre>
+<pre>type NoOpApplication struct{}
+<pre>    NoOpApplication is a default implementation of Application that does
+<pre>    nothing. Use this when you don't need application callbacks.
+<pre>
+<pre>func (n *NoOpApplication) FromAdmin(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>func (n *NoOpApplication) FromApp(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>func (n *NoOpApplication) OnCreate(sessionID string)
+<pre>
+<pre>func (n *NoOpApplication) OnLogon(sessionID string)
+<pre>
+<pre>func (n *NoOpApplication) OnLogout(sessionID string)
+<pre>
+<pre>func (n *NoOpApplication) OnMessage(msg *fixmsg.FixMessage, sessionID string)
+<pre>
+<pre>func (n *NoOpApplication) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string)
+<pre>
+<pre>func (n *NoOpApplication) ToAdmin(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>func (n *NoOpApplication) ToApp(msg *fixmsg.FixMessage, sessionID string) error
+<pre>
+<pre>type SeqManager struct {
+<pre>	// Has unexported fields.
+<pre>}
+<pre>    SeqManager manages incoming and outgoing sequence numbers and persists them
+<pre>    to store.
+<pre>
+<pre>func NewSeqManager(st store.Store, sessionID string) *SeqManager
+<pre>
+<pre>func (s *SeqManager) Incoming() int
+<pre>
+<pre>func (s *SeqManager) IncrementIncoming() (int, error)
+<pre>
+<pre>func (s *SeqManager) IncrementOutgoing() (int, error)
+<pre>
+<pre>func (s *SeqManager) Outgoing() int
+<pre>
+<pre>func (s *SeqManager) SetIncoming(n int) error
+<pre>
+<pre>func (s *SeqManager) SetOutgoing(n int) error
+<pre>
+    </pre>
+    </div>
+</body>
+</html>

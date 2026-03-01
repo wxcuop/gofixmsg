@@ -1,0 +1,57 @@
+package spec // import "."
+
+Package spec loads QuickFIX XML specification files.
+
+TYPES
+
+type FixSpec struct {
+	Version        string
+	Tags           map[int]*FixTag
+	MessagesByType map[string]*MessageSpec
+	MessagesByName map[string]*MessageSpec
+}
+    FixSpec is the in-memory representation of a QuickFIX XML specification.
+
+func Load(filename string) (*FixSpec, error)
+    Load parses a QuickFIX XML spec file.
+
+func LoadBytes(data []byte) (*FixSpec, error)
+    LoadBytes parses a QuickFIX XML spec from in-memory bytes (useful in tests).
+
+func (s *FixSpec) MessageByType(msgType string) *MessageSpec
+    MessageByType returns the MessageSpec for the given MsgType (e.g. "D").
+
+func (s *FixSpec) TagByNumber(n int) *FixTag
+    TagByNumber returns the FixTag for tag number n.
+
+func (s *FixSpec) TagNumber(tagName string) (int, bool)
+    TagNumber returns the tag number for tagName, (0, false) if unknown.
+
+type FixTag struct {
+	Number int
+	Name   string
+	Type   string
+	Values map[string]string // Enum values
+}
+    FixTag describes a single FIX tag from the specification.
+
+type GroupSpec struct {
+	NumberTag    int
+	FirstTag     int
+	RequiredTags map[int]struct{}
+	Tags         map[int]struct{}
+	NestedGroups map[int]*GroupSpec
+}
+    GroupSpec describes a single repeating group within a message or nested
+    group.
+
+type MessageSpec struct {
+	Name         string
+	MsgType      string
+	RequiredTags map[int]struct{}
+	Tags         map[int]struct{}
+	Groups       map[int]*GroupSpec
+}
+    MessageSpec describes the fields and repeating groups of one FIX message
+    type.
+

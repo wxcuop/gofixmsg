@@ -1,0 +1,60 @@
+package state // import "."
+
+
+CONSTANTS
+
+const (
+	StateDisconnected     = "Disconnected"
+	StateConnecting       = "Connecting"
+	StateLogonInProgress  = "LogonInProgress"
+	StateAwaitingLogon    = "AwaitingLogon"
+	StateActive           = "Active"
+	StateLogoutInProgress = "LogoutInProgress"
+	StateReconnecting     = "Reconnecting"
+)
+    Predefined state names
+
+const (
+	EventConnect            = "connect"
+	EventConnected          = "connected"
+	EventClientAccepted     = "client_accepted"
+	EventLogonSent          = "logon_sent"
+	EventLogonReceived      = "logon_received"
+	EventLogonFailed        = "logon_failed"
+	EventLogout             = "logout"
+	EventLogoutComplete     = "logout_complete"
+	EventLogoutReceived     = "logout_received"
+	EventDisconnect         = "disconnect"
+	EventDisconnected       = "disconnected"
+	EventInitiateReconnect  = "initiate_reconnect"
+	EventReconnectFailedMax = "reconnect_failed_max_retries"
+	EventGiveup             = "giveup"
+)
+    Predefined events
+
+
+TYPES
+
+type StateMachine struct {
+	// Has unexported fields.
+}
+    StateMachine manages session state transitions.
+
+func NewStateMachine() *StateMachine
+    NewStateMachine returns a StateMachine starting in Disconnected.
+
+func (s *StateMachine) OnEvent(event string) (string, error)
+    OnEvent applies an event string and returns the new state or error if
+    undefined. Returns error if no transition is defined for the current
+    state+event combination.
+
+func (s *StateMachine) Register(cb func(string))
+    Register adds a subscriber callback that is invoked whenever the state
+    changes.
+
+func (s *StateMachine) SetLogger(logger *slog.Logger)
+    SetLogger sets the logger for state transitions.
+
+func (s *StateMachine) State() string
+    State returns the current state.
+

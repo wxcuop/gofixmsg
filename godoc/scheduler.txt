@@ -1,0 +1,41 @@
+package scheduler // import "."
+
+
+FUNCTIONS
+
+func ScheduleAfter(d time.Duration, f func())
+    ScheduleAfter runs f after duration d in a new goroutine (original simple
+    scheduler)
+
+
+TYPES
+
+type RuntimeScheduler struct {
+	// Has unexported fields.
+}
+    RuntimeScheduler manages config-driven scheduled actions
+
+func NewRuntimeScheduler() *RuntimeScheduler
+    NewRuntimeScheduler creates a new scheduler (not started)
+
+func (s *RuntimeScheduler) GetTasks() []ScheduleTask
+    GetTasks returns a copy of currently loaded tasks (for testing)
+
+func (s *RuntimeScheduler) Load(mgr *config.Manager) error
+    Load parses [Scheduler] schedules JSON from ConfigManager
+
+func (s *RuntimeScheduler) RegisterAction(name string, fn func())
+    RegisterAction registers a handler for an action name
+
+func (s *RuntimeScheduler) Start()
+    Start begins the scheduler loop (runs in a goroutine)
+
+func (s *RuntimeScheduler) Stop()
+    Stop halts the scheduler
+
+type ScheduleTask struct {
+	Time   string `json:"time"`   // HH:MM format
+	Action string `json:"action"` // start, stop/logout, reset, reset_start
+}
+    ScheduleTask represents a single scheduled task from config
+

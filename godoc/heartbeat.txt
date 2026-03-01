@@ -1,0 +1,18 @@
+package heartbeat // import "."
+
+
+TYPES
+
+type Heartbeat struct {
+	Interval time.Duration
+
+	// Has unexported fields.
+}
+    Heartbeat sends ticks to the Receiver function at Interval.
+
+func New(interval time.Duration, recv func()) *Heartbeat
+
+func (h *Heartbeat) Start(ctx context.Context)
+
+func (h *Heartbeat) Stop()
+
