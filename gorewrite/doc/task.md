@@ -217,4 +217,63 @@ Phase 25 ──┴─────────────→ Master branch clean
 
 Then (after all merged):
 Phase 26 ──→ Master branch with refactoring
+
+Then (Post-Phase 26, parallel):
+Phase 27 ──┐
+Phase 28 ──┼─→ Master branch ready for Group 6
+Phase 29 ──┤
+Phase 30 ──┘
 ```
+
+---
+
+### ✅ PARALLEL GROUP 5: API & Feature Parity (Post-Phase 26) - COMPLETE
+
+#### ✅ Phase 27: Application Callback Parity (`OnMessage`) - COMPLETE
+**Status:** ✅ COMPLETE
+**Commits:** 03bb3bc, 6b94bfe
+**Implementation:**
+- [x] Add `OnMessage` to Application interface
+- [x] Route sessionID to OnMessage callback in Processor
+- [x] Implement OnMessage in testApplicationImpl
+- [x] Add 4 comprehensive unit tests for callback routing
+  - OnMessage called after successful FromApp for app messages
+  - OnMessage NOT called for admin messages
+  - OnMessage NOT called if FromApp rejects
+  - OnMessage receives correct sessionID
+
+**Tests:** 4/4 PASSING ✅
+
+#### ✅ Phase 28: Scheduler Parity with Python Runtime Scheduler - COMPLETE
+**Status:** ✅ COMPLETE
+**Commit:** 86613a7
+**Implementation:**
+- [x] Implement RuntimeScheduler with full lifecycle
+  - Load schedules from `[Scheduler] schedules` JSON config
+  - Parse HH:MM format times and check every minute
+  - Thread-safe with mutex protection
+  - 1-minute window for action execution
+- [x] Supported actions: start, stop/logout, reset, reset_start
+  - `start`: Connect to FIX peer
+  - `stop/logout`: Logout and close connection
+  - `reset`: Reset sequence numbers to 1
+  - `reset_start`: Reset sequences and connect
+- [x] Engine integration
+  - Wire scheduler into SetupComponents
+  - Auto-load config on startup
+  - Provide StartScheduler/StopScheduler control
+  - Graceful panic recovery in handlers
+- [x] Add 7 comprehensive tests for scheduler
+  - Task parsing and validation
+  - Action dispatch and execution
+  - Panic recovery
+  - Time window boundaries
+  - Unknown action handling
+
+**Tests:** 7/7 PASSING ✅
+
+**Group 5 Summary:**
+- ✅ Phase 27 & 28 COMPLETE
+- ✅ All 16+ tests passing (11 new tests added)
+- ✅ Ready to merge to master
+- ✅ Full API parity with Python runtime scheduler achieved

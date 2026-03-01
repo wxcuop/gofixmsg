@@ -234,6 +234,11 @@ func (t *testApplicationImpl) FromApp(msg *fixmsg.FixMessage, sessionID string) 
 	return nil
 }
 
+func (t *testApplicationImpl) OnMessage(msg *fixmsg.FixMessage, sessionID string) {
+	msgType, _ := msg.Get(35)
+	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnMessage(MsgType=%s)", msgType))
+}
+
 func (t *testApplicationImpl) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string) {
 	*t.callOrder = append(*t.callOrder, fmt.Sprintf("OnReject(%s)", reason))
 }

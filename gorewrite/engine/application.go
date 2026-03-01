@@ -32,6 +32,10 @@ type Application interface {
 	// The application may reject processing by returning error.
 	FromApp(msg *fixmsg.FixMessage, sessionID string) error
 
+	// OnMessage is called for every application-level message after it has been received and processed.
+	// This is called after FromApp regardless of result. Use this for generic message handling.
+	OnMessage(msg *fixmsg.FixMessage, sessionID string)
+
 	// OnReject is called when a message is rejected (e.g., invalid seqnum, parsing error).
 	OnReject(msg *fixmsg.FixMessage, reason string, sessionID string)
 }
@@ -47,6 +51,7 @@ func (n *NoOpApplication) ToAdmin(msg *fixmsg.FixMessage, sessionID string) erro
 func (n *NoOpApplication) FromAdmin(msg *fixmsg.FixMessage, sessionID string) error                  { return nil }
 func (n *NoOpApplication) ToApp(msg *fixmsg.FixMessage, sessionID string) error                      { return nil }
 func (n *NoOpApplication) FromApp(msg *fixmsg.FixMessage, sessionID string) error                    { return nil }
+func (n *NoOpApplication) OnMessage(msg *fixmsg.FixMessage, sessionID string)                        {}
 func (n *NoOpApplication) OnReject(msg *fixmsg.FixMessage, reason string, sessionID string)          {}
 
 // Compile-time check that NoOpApplication implements Application.

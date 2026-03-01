@@ -10,11 +10,12 @@ import (
 
 // Processor dispatches by MsgType to registered handlers.
 type Processor struct {
-	h          map[string]func(*fixmsg.FixMessage) error
-	app        Application
-	spec       *spec.FixSpec
-	validateFn func(*fixmsg.FixMessage, *spec.FixSpec) error
-	logger     *slog.Logger
+	h              map[string]func(*fixmsg.FixMessage) error
+	app            Application
+	spec           *spec.FixSpec
+	validateFn     func(*fixmsg.FixMessage, *spec.FixSpec) error
+	logger         *slog.Logger
+	getSessionIDFn func() string // callback to get current session ID for app callbacks
 }
 
 func (p *Processor) getLogger() *slog.Logger {
@@ -34,6 +35,11 @@ func NewProcessor() *Processor {
 // SetApplication sets the application for FromApp callbacks.
 func (p *Processor) SetApplication(app Application) {
 	p.app = app
+}
+
+// SetGetSessionIDFn sets the function to retrieve the current session ID for app callbacks.
+func (p *Processor) SetGetSessionIDFn(fn func() string) {
+	p.getSessionIDFn = fn
 }
 
 // SetSpec sets the FIX dictionary spec for validation.
@@ -57,11 +63,19 @@ func (p *Processor) Register(msgType string, fn func(*fixmsg.FixMessage) error) 
 	// automatically wrap non-admin handlers to call FromApp
 	wrapped := func(m *fixmsg.FixMessage) error {
 		if !IsAdminMessageType(msgType) && p.app != nil {
-			if err := p.app.FromApp(m, ""); err != nil {
+			sessionID := ""
+			if p.getSessionIDFn != nil {
+				sessionID = p.getSessionIDFn()
+			}
+			if err := p.app.FromApp(m, sessionID); err != nil {
 				if p.app != nil {
-					p.app.OnReject(m, fmt.Sprintf("FromApp rejected: %v", err), "")
+					p.app.OnReject(m, fmt.Sprintf("FromApp rejected: %v", err), sessionID)
 				}
 				return err
+			}
+			// Call OnMessage after successful FromApp
+			if p.app != nil {
+				p.app.OnMessage(m, sessionID)
 			}
 		}
 		// call the actual handler
@@ -80,6 +94,10 @@ func (p *Processor) RegisterWithFromApp(msgType string, sessionID string, fn fun
 					p.app.OnReject(m, fmt.Sprintf("FromApp rejected: %v", err), sessionID)
 				}
 				return err
+			}
+			// Call OnMessage after successful FromApp
+			if p.app != nil {
+				p.app.OnMessage(m, sessionID)
 			}
 		}
 		// call the actual handler
