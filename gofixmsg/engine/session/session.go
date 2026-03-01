@@ -246,6 +246,14 @@ func (s *Session) Send(b []byte) (err error) {
 			err = io.ErrClosedPipe
 		}
 	}()
+	// Check if session is already closed to avoid sending on closed channel
+	s.mu.Lock()
+	if s.closed {
+		s.mu.Unlock()
+		return io.ErrClosedPipe
+	}
+	s.mu.Unlock()
+	
 	select {
 	case <-s.ctx.Done():
 		return io.ErrClosedPipe
